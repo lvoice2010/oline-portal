@@ -1,0 +1,23 @@
+/node_modules
+/.next
+/out
+/build
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+
+# Vercel
+.vercel
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local-only files (документация и временные)
+/.claude/

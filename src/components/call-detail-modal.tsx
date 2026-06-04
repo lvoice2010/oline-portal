@@ -1,0 +1,354 @@
+"use client";
+
+import * as React from "react";
+import {
+  X,
+  Play,
+  Pause,
+  Volume2,
+  Download,
+  PhoneCall,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
+  User2,
+  Headphones,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Call } from "@/lib/mock-data";
+
+function fmtTime(sec: number) {
+  if (sec <= 0) return "00:00";
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+const TRIGGER_ICON = {
+  ok: { Icon: CheckCircle2, color: "text-emerald-500" },
+  warn: { Icon: AlertTriangle, color: "text-amber-500" },
+  info: { Icon: Info, color: "text-sky-500" },
+} as const;
+
+function AudioPlayerStub({ duration }: { duration: number }) {
+  const [playing, setPlaying] = React.useState(false);
+  const [pos, setPos] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setPos((p) => {
+        if (p >= duration) {
+          setPlaying(false);
+          return duration;
+        }
+        return p + 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [playing, duration]);
+
+  const pct = duration > 0 ? (pos / duration) * 100 : 0;
+
+  return (
+    <div className="flex items-center gap-3 rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
+      <button
+        onClick={() => setPlaying((p) => !p)}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-copper text-white shadow-soft transition-colors hover:bg-copper-light"
+        aria-label={playing ? "Пауза" : "Воспроизвести"}
+      >
+        {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+      </button>
+      <div className="min-w-0 flex-1">
+        <div className="flex h-8 items-end gap-0.5">
+          {/* Псевдо-волна */}
+          {Array.from({ length: 60 }).map((_, i) => {
+            const done = (i / 60) * 100 < pct;
+            const h = 4 + Math.abs(Math.sin(i * 0.7) * 18) + (i % 3) * 4;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "w-[3px] shrink-0 rounded-full transition-colors",
+                  done ? "bg-copper" : "bg-navy/20"
+                )}
+                style={{ height: `${h}px` }}
+              />
+            );
+          })}
+        </div>
+        <div className="mt-1.5 flex justify-between text-[10px] text-navy/55">
+          <span>{fmtTime(pos)}</span>
+          <span>{fmtTime(duration)}</span>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5 text-navy/55">
+        <Volume2 size={15} />
+      </div>
+      <button
+        title="Скачать запись"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-navy/15 bg-white text-navy/70 hover:bg-navy-50"
+      >
+        <Download size={15} />
+      </button>
+    </div>
+  );
+}
+
+const STATUS_LABEL = {
+  answered: "Завершён",
+  missed: "Пропущен",
+  callback: "Перезвон",
+} as const;
+
+const STATUS_COLOR = {
+  answered: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  missed: "bg-rose-50 text-rose-700 border border-rose-200",
+  callback: "bg-amber-50 text-amber-700 border border-amber-200",
+} as const;
+
+export function CallDetailModal({
+  open,
+  onClose,
+  call,
+}: {
+  open: boolean;
+  onClose: () => void;
+  call: Call | null;
+}) {
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open || !call) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 flex h-[92vh] w-full max-w-6xl flex-col rounded-card bg-white shadow-soft-lg">
+        {/* Шапка */}
+        <div className="flex items-start justify-between gap-4 border-b border-navy/[0.06] px-6 py-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-navy">
+                Просмотр вызова · {call.date} {call.time}
+              </h2>
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                  STATUS_COLOR[call.status]
+                )}
+              >
+                {STATUS_LABEL[call.status]}
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-navy/45">
+              UID: {call.uid} · очередь {call.queue.name}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-navy/50 hover:bg-navy-50 hover:text-navy"
+            aria-label="Закрыть"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Тело */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {/* Левая колонка — метаданные */}
+            <div className="space-y-4 lg:col-span-1">
+              <div>
+                <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                  Информация о вызове
+                </p>
+                <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
+                  <Row label="Номер звонящего" value={call.caller} mono />
+                  <Row label="Номер назначения" value={call.destination} mono />
+                  <Row label="Очередь" value={call.queue.name} />
+                  <Row
+                    label="Оператор"
+                    value={
+                      <span className="inline-flex items-center gap-1.5">
+                        <User2 size={12} className="text-navy/45" />
+                        [{call.operator.id}] {call.operator.name}
+                      </span>
+                    }
+                  />
+                  <Row label="Ожидание" value={`${call.waitSec} сек`} />
+                  <Row label="Длительность" value={`${call.durationSec} сек`} />
+                  <Row label="Удержание (Hold)" value={`${call.holdSec} сек`} />
+                  {call.topic && <Row label="Тема" value={call.topic} />}
+                </div>
+              </div>
+            </div>
+
+          {/* Центр — ИИ-карточка */}
+          <div className="space-y-4 lg:col-span-1">
+            {call.ai ? (
+              <>
+                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-copper">
+                  <Sparkles size={12} /> ИИ-карточка вызова
+                </p>
+                <div className="rounded-card border border-copper/30 bg-copper/[0.04] p-4">
+                  <p className="mb-1 text-[11px] uppercase tracking-wider text-navy/55">
+                    Суть обращения
+                  </p>
+                  <p className="text-sm leading-relaxed text-navy">
+                    {call.ai.summary}
+                  </p>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider text-navy/55">
+                        Категория
+                      </p>
+                      <p className="text-sm font-medium text-navy">
+                        {call.ai.category}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider text-navy/55">
+                        Подкатегория
+                      </p>
+                      <p className="text-sm font-medium text-navy">
+                        {call.ai.subcategory}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-copper/20 pt-3">
+                    <span className="text-[11px] uppercase tracking-wider text-navy/55">
+                      Соответствие скрипту
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                        call.ai.scriptMatch >= 90
+                          ? "bg-emerald-500 text-white"
+                          : call.ai.scriptMatch >= 75
+                          ? "bg-amber-500 text-white"
+                          : "bg-rose-500 text-white"
+                      )}
+                    >
+                      {call.ai.scriptMatch.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                    Триггеры
+                  </p>
+                  <ul className="space-y-2">
+                    {call.ai.triggers.map((t, i) => {
+                      const { Icon, color } = TRIGGER_ICON[t.tone];
+                      return (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 rounded-lg bg-navy-50/50 px-3 py-2 text-xs text-navy/80"
+                        >
+                          <Icon size={13} className={cn("mt-0.5 shrink-0", color)} />
+                          <span>{t.label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
+                ИИ-карточка для этого вызова не сформирована
+              </div>
+            )}
+          </div>
+
+          {/* Правая колонка — стенограмма */}
+          <div className="lg:col-span-1">
+            <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+              Стенограмма
+            </p>
+            {call.transcript ? (
+              <div className="max-h-[60vh] space-y-2 overflow-y-auto rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
+                {call.transcript.map((m, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex flex-col gap-0.5",
+                      m.speaker === "agent" ? "items-start" : "items-end"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                        m.speaker === "agent"
+                          ? "rounded-bl-sm bg-white text-navy shadow-soft"
+                          : "rounded-br-sm bg-copper text-white"
+                      )}
+                    >
+                      {m.text}
+                    </div>
+                    <span className="px-1 text-[9px] text-navy/40">
+                      {m.speaker === "agent" ? "Оператор" : "Клиент"} · {m.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
+                Расшифровка для этого вызова не сформирована
+              </div>
+            )}
+            </div>
+          </div>
+
+          {/* Запись разговора — внизу под всеми блоками */}
+          {call.hasRecording && (
+            <div className="mt-6">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                <Headphones size={12} /> Запись разговора
+              </p>
+              <AudioPlayerStub duration={call.durationSec} />
+            </div>
+          )}
+        </div>
+
+        {/* Подвал */}
+        <div className="flex items-center justify-between gap-3 border-t border-navy/[0.06] px-6 py-3">
+          <p className="flex items-center gap-1.5 text-xs text-navy/55">
+            <PhoneCall size={12} /> Вызов № {call.id}
+          </p>
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-navy/15 bg-white px-4 py-2 text-sm font-medium text-navy hover:bg-navy-50"
+          >
+            Закрыть
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-navy/[0.04] px-3 py-2 text-xs last:border-0">
+      <span className="text-navy/55">{label}</span>
+      <span className={cn("text-right text-navy", mono && "font-mono")}>
+        {value}
+      </span>
+    </div>
+  );
+}
