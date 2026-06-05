@@ -74,7 +74,6 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   const [customOpen, setCustomOpen] = React.useState(false);
   const [customFrom, setCustomFrom] = React.useState("2026-04-15");
   const [customTo, setCustomTo] = React.useState("2026-05-15");
-  const [opPeriod, setOpPeriod] = React.useState<PeriodKey>("month");
 
   if (!report) {
     return (
@@ -187,13 +186,11 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
         );
       })()}
 
-      {/* Часовая карта нагрузки + Вызовы по операторам.
-         У сервисов без операторов (нейроассистент) теплокарта на всю ширину. */}
+      {/* Часовая карта нагрузки + (опционально) Каналы / Текст-голос у нейроассистента */}
       <div
         className={cn(
           "grid grid-cols-1 gap-5",
-          report.channels && report.channels.items.length > 0 && "xl:grid-cols-4",
-          report.operatorStats && report.operatorStats.length > 0 && "xl:grid-cols-2"
+          report.channels && report.channels.items.length > 0 && "xl:grid-cols-4"
         )}
       >
         {/* Текст vs голос — самый левый блок (для нейроассистента) */}
@@ -355,87 +352,6 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
             <span className="ml-auto text-navy/40">в ячейках — звонков</span>
           </div>
         </Card>
-
-        {/* Операторы справа */}
-        {report.operatorStats && report.operatorStats.length > 0 && (() => {
-          const opData =
-            report.operatorStatsByPeriod?.[opPeriod] ?? report.operatorStats;
-          return (
-          <Card className="p-5">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-navy">
-                Вызовы по операторам
-              </h3>
-              <div className="flex flex-wrap gap-0.5 rounded-lg border border-navy/15 bg-white p-0.5">
-                {PERIOD_OPTIONS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setOpPeriod(p.id)}
-                    className={cn(
-                      "rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors",
-                      opPeriod === p.id
-                        ? "bg-navy text-white"
-                        : "text-navy/60 hover:bg-navy-50"
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-navy/[0.08] text-left text-[11px] uppercase tracking-wider text-navy/55">
-                  <th className="pb-2 font-medium">Оператор</th>
-                  <th className="pb-2 font-medium text-right">Кол-во вызовов</th>
-                  <th className="pb-2 font-medium text-right">
-                    Суммарное время разговора
-                  </th>
-                  <th className="pb-2 font-medium text-right">
-                    Среднее время разговора
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {opData.map((op) => (
-                  <tr
-                    key={op.operatorId}
-                    className="border-b border-navy/[0.04] last:border-0"
-                  >
-                    <td className="py-2.5">
-                      <span className="text-[11px] text-navy/45">
-                        [{op.operatorId}]{" "}
-                      </span>
-                      <span className="text-navy/85">{op.name}</span>
-                    </td>
-                    <td className="py-2.5 text-right">
-                      <span className="font-semibold tabular-nums text-navy">
-                        {op.callCount}
-                      </span>
-                      <span className="ml-1 text-[11px] tabular-nums text-navy/45">
-                        ({op.pctOfTotal.toFixed(1)}%)
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-right tabular-nums text-navy/75">
-                      {Math.round(op.totalTalkSec / 60).toLocaleString("ru-RU")}
-                      <span className="ml-0.5 text-[11px] text-navy/45">
-                        {" "}
-                        мин
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-right tabular-nums text-navy/75">
-                      {Math.floor(op.avgTalkSec / 60)} мин{" "}
-                      {String(op.avgTalkSec % 60).padStart(2, "0")} сек
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-          );
-        })()}
 
       </div>
 
