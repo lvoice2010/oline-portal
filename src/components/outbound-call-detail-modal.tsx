@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  OUTBOUND_OUTCOME_REASON_LABEL,
   type OutboundCall,
   type OutboundCallStatus,
+  type OutboundOutcomeReason,
 } from "@/lib/mock-data";
 import {
   AiField,
@@ -21,8 +23,17 @@ import {
   UidRow,
 } from "@/components/call-detail-modal";
 
-// Бейдж статуса — двухуровневый: L1 (дозвон/нет дозвона), L2 (целевое/без целевого)
-function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
+// Бейдж статуса — трёхуровневый:
+//   L1 — Дозвон / Нет дозвона
+//   L2 — Целевое / Без целевого (только при дозвоне)
+//   L3 — конкретная причина для «без целевого»
+function TwoLevelStatusBadge({
+  status,
+  reason,
+}: {
+  status: OutboundCallStatus;
+  reason?: OutboundOutcomeReason;
+}) {
   if (status === "not_reached") {
     return (
       <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-medium text-rose-700">
@@ -42,6 +53,11 @@ function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
       >
         {isTarget ? "Целевое" : "Без целевого"}
       </span>
+      {!isTarget && reason && (
+        <span className="bg-sky-200/70 px-2.5 py-0.5 text-sky-900/85">
+          {OUTBOUND_OUTCOME_REASON_LABEL[reason]}
+        </span>
+      )}
     </span>
   );
 }
@@ -88,7 +104,10 @@ export function OutboundCallDetailModal({
               <h2 className="text-base font-semibold text-navy">
                 Просмотр исходящего · {call.date} {call.time}
               </h2>
-              <TwoLevelStatusBadge status={call.status} />
+              <TwoLevelStatusBadge
+                status={call.status}
+                reason={call.outcomeReason}
+              />
               <span className="rounded-full border border-navy/15 bg-navy-50 px-2.5 py-0.5 text-[11px] font-medium text-navy/70">
                 Попытка {call.attempt}/3
               </span>
@@ -142,7 +161,11 @@ export function OutboundCallDetailModal({
                         ? "Нет дозвона"
                         : call.status === "target"
                         ? "Дозвон → Целевое"
-                        : "Дозвон → Без целевого"
+                        : `Дозвон → Без целевого${
+                            call.outcomeReason
+                              ? ` → ${OUTBOUND_OUTCOME_REASON_LABEL[call.outcomeReason]}`
+                              : ""
+                          }`
                     }
                   />
                 </div>

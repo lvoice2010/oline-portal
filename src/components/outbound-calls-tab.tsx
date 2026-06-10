@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
   outboundCalls,
+  OUTBOUND_OUTCOME_REASON_LABEL,
   type OutboundCall,
   type OutboundCallStatus,
+  type OutboundOutcomeReason,
 } from "@/lib/mock-data";
 import { OutboundCallDetailModal } from "@/components/outbound-call-detail-modal";
 
@@ -366,7 +368,10 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <TwoLevelStatusBadge status={c.status} />
+                    <TwoLevelStatusBadge
+                      status={c.status}
+                      reason={c.outcomeReason}
+                    />
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-navy">
                     {c.durationSec > 0 ? fmtDuration(c.durationSec) : "—"}
@@ -404,10 +409,18 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   );
 }
 
-// Двухуровневый бейдж статуса — отражает реальную иерархию:
+// Трёхуровневый бейдж статуса — отражает реальную иерархию:
 //   L1 (дозвонились?) Дозвон / Нет дозвона
 //   L2 (если дозвонились) — Целевое или Без целевого
-function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
+//   L3 (если «Без целевого») — конкретная причина (нет потребности /
+//       бросил трубку / не та компания / возражение «дорого» / ...)
+function TwoLevelStatusBadge({
+  status,
+  reason,
+}: {
+  status: OutboundCallStatus;
+  reason?: OutboundOutcomeReason;
+}) {
   if (status === "not_reached") {
     return (
       <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
@@ -418,11 +431,11 @@ function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
   // status: reached / target → оба «дозвон», отличаются исходом
   const isTarget = status === "target";
   return (
-    <span className="inline-flex items-center overflow-hidden rounded-full border border-sky-200 bg-sky-50 text-[11px] font-medium">
-      <span className="px-2 py-0.5 text-sky-700">Дозвон</span>
+    <span className="inline-flex max-w-full items-center overflow-hidden rounded-full border border-sky-200 bg-sky-50 text-[11px] font-medium">
+      <span className="shrink-0 px-2 py-0.5 text-sky-700">Дозвон</span>
       <span
         className={cn(
-          "px-2 py-0.5",
+          "shrink-0 px-2 py-0.5",
           isTarget
             ? "bg-emerald-500 text-white"
             : "bg-sky-100 text-sky-700/80"
@@ -430,6 +443,11 @@ function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
       >
         {isTarget ? "Целевое" : "Без целевого"}
       </span>
+      {!isTarget && reason && (
+        <span className="truncate bg-sky-200/70 px-2 py-0.5 text-sky-900/85">
+          {OUTBOUND_OUTCOME_REASON_LABEL[reason]}
+        </span>
+      )}
     </span>
   );
 }
