@@ -27,14 +27,6 @@ const NAVY = "#1F5240";
 const SAGE = "#7CB342";
 const COPPER = "#C9633F";
 
-function heatColor(pct: number) {
-  // % дозвона: <50 — красный, 50-75 — жёлтый, 75+ — зелёный
-  if (pct >= 75) return "hsl(150, 60%, 45%)";
-  if (pct >= 60) return "hsl(90, 55%, 50%)";
-  if (pct >= 50) return "hsl(45, 80%, 55%)";
-  return "hsl(0, 70%, 60%)";
-}
-
 export function OutboundReportTab({ serviceId }: { serviceId: string }) {
   const report = outboundReports[serviceId];
   if (!report) {
@@ -310,64 +302,8 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
 
       </div>
 
-      {/* 3 + 4: ТЕПЛОКАРТА + ДИНАМИКА ПО НЕДЕЛЯМ */}
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        {/* Теплокарта дозвона */}
-        <Card className="p-5">
-          <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-navy/65">
-              % дозвона · день × час
-            </h3>
-            <span className="rounded-md bg-navy-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-navy/65">
-              Май 2026
-            </span>
-          </div>
-          <div>
-            <div className="flex">
-              <div className="w-6 shrink-0" />
-              {report.heatmap.hours.map((h) => (
-                <div
-                  key={h}
-                  className="flex-1 pb-1 text-center text-[9px] text-navy/45"
-                >
-                  {h}
-                </div>
-              ))}
-            </div>
-            {report.heatmap.data.map((row, d) => (
-              <div key={d} className="flex items-center">
-                <div className="w-6 shrink-0 pr-1 text-right text-[10px] font-medium text-navy/55">
-                  {report.heatmap.days[d]}
-                </div>
-                {row.map((v, h) => (
-                  <div
-                    key={h}
-                    title={`${report.heatmap.days[d]}, ${report.heatmap.hours[h]}:00 — дозвон ${v}%`}
-                    className={cn(
-                      "m-[1px] flex h-6 flex-1 items-center justify-center rounded-[3px] text-[9px] font-medium text-white tabular-nums"
-                    )}
-                    style={{ background: heatColor(v) }}
-                  >
-                    {v}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-[10px] text-navy/55">
-            <span>Плохой дозвон</span>
-            <div className="flex h-2 w-32 overflow-hidden rounded-full">
-              <div style={{ background: heatColor(40) }} className="flex-1" />
-              <div style={{ background: heatColor(55) }} className="flex-1" />
-              <div style={{ background: heatColor(65) }} className="flex-1" />
-              <div style={{ background: heatColor(80) }} className="flex-1" />
-            </div>
-            <span>Хороший</span>
-            <span className="ml-auto text-navy/40">в ячейках — %</span>
-          </div>
-        </Card>
-
-        {/* Динамика по неделям */}
+      {/* Динамика по неделям — на всю ширину после удаления теплокарты */}
+      <div>
         <Card className="p-5">
           <div className="mb-3 flex items-baseline justify-between gap-2">
             <h3 className="text-sm font-semibold text-navy">
