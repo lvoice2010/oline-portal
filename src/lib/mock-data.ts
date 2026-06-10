@@ -1191,6 +1191,7 @@ export type Call = {
   rating?: number; // 0-100 КЛН (контроль линии)
   topic?: string;
   ai?: {
+    clientName?: string; // ФИО, если ИИ смог извлечь из стенограммы
     summary: string;
     category: string;
     subcategory: string;
@@ -1241,6 +1242,7 @@ export const calls: Call[] = [
     rating: 100,
     topic: "Статус заказа",
     ai: {
+      clientName: "Иванов Сергей Петрович",
       summary: "Абонент уточнил статус заказа №4452. Оператор предоставил информацию о доставке курьером на следующий день до 12:00.",
       category: "Заказы и доставка",
       subcategory: "Статус заказа",
@@ -1274,6 +1276,7 @@ export const calls: Call[] = [
     rating: 100,
     topic: "Возврат",
     ai: {
+      clientName: "Петрова Анна Михайловна",
       summary: "Клиент оформил возврат товара (заказ 3318, причина — размер). Возврат средств в течение 7 рабочих дней.",
       category: "Возвраты",
       subcategory: "Возврат по размеру",

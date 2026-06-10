@@ -200,46 +200,26 @@ export function CallDetailModal({
                   <Sparkles size={12} /> ИИ-карточка вызова
                 </p>
                 <div className="rounded-card border border-copper/30 bg-copper/[0.04] p-4">
-                  <p className="mb-1 text-[11px] uppercase tracking-wider text-navy/55">
-                    Суть обращения
-                  </p>
-                  <p className="text-sm leading-relaxed text-navy">
-                    {call.ai.summary}
-                  </p>
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wider text-navy/55">
-                        Категория
-                      </p>
-                      <p className="text-sm font-medium text-navy">
-                        {call.ai.category}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wider text-navy/55">
-                        Подкатегория
-                      </p>
-                      <p className="text-sm font-medium text-navy">
-                        {call.ai.subcategory}
-                      </p>
-                    </div>
+                  {/* Извлечённые поля — стопкой, как в админке оператора */}
+                  <div className="space-y-3.5">
+                    <AiField
+                      label="ФИО клиента"
+                      value={call.ai.clientName?.trim() || "—"}
+                      empty={!call.ai.clientName?.trim()}
+                    />
+                    <AiField
+                      label="phone_number"
+                      value={normalizePhone(call.caller)}
+                      mono
+                    />
+                    <AiField label="Суть обращения" value={call.ai.summary} />
+                    <AiField label="Категория" value={call.ai.category} />
+                    <AiField label="Подкатегория" value={call.ai.subcategory} />
                   </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-copper/20 pt-3">
-                    <span className="text-[11px] uppercase tracking-wider text-navy/55">
-                      Соответствие скрипту
-                    </span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                        call.ai.scriptMatch >= 90
-                          ? "bg-emerald-500 text-white"
-                          : call.ai.scriptMatch >= 75
-                          ? "bg-amber-500 text-white"
-                          : "bg-rose-500 text-white"
-                      )}
-                    >
-                      {call.ai.scriptMatch.toFixed(2)}%
-                    </span>
+
+                  {/* Соответствие скрипту — полоса прогресса внизу карточки */}
+                  <div className="mt-5 border-t border-copper/20 pt-4">
+                    <ScriptMatchBar value={call.ai.scriptMatch} />
                   </div>
                 </div>
 
@@ -354,6 +334,74 @@ function Row({
       </span>
     </div>
   );
+}
+
+// Поле в ИИ-карточке: жирный лейбл сверху, значение под ним.
+// Такой вид привычен оператору — повторяет вёрстку их рабочей админки.
+function AiField({
+  label,
+  value,
+  mono = false,
+  empty = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+  empty?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[12px] font-semibold text-navy">{label}</p>
+      <p
+        className={cn(
+          "mt-0.5 text-sm leading-relaxed",
+          empty ? "text-navy/35" : "text-navy/85",
+          mono && "font-mono"
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+// Полоса прогресса «Соответствие диалога скрипту».
+// Цвет — по порогу: 90+ зелёный, 75–89 янтарный, < 75 розовый.
+// Label и % лежат поверх полосы (как на скриншоте админки).
+function ScriptMatchBar({ value }: { value: number }) {
+  const clamped = Math.max(0, Math.min(100, value));
+  const tone =
+    clamped >= 90
+      ? "bg-emerald-500"
+      : clamped >= 75
+      ? "bg-amber-500"
+      : "bg-rose-500";
+  return (
+    <div className="relative h-9 w-full overflow-hidden rounded-lg border border-navy/15 bg-navy-50/60">
+      {/* Цветная заливка по проценту */}
+      <div
+        className={cn("absolute inset-y-0 left-0 transition-[width]", tone)}
+        style={{ width: `${clamped}%` }}
+      />
+      {/* Текст поверх — лейбл слева, процент справа */}
+      <div className="relative flex h-full items-center justify-between px-3 text-[12px] font-semibold">
+        <span className={cn(clamped >= 25 ? "text-white" : "text-navy/85")}>
+          Соответствие диалога скрипту
+        </span>
+        <span className="text-white tabular-nums">{Math.round(clamped)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// Преобразуем «+7 (495) 555-12-12» / «8 999 ...» → «74955551212» —
+// именно в таком виде номер хранится во внутренних системах
+// (поле phone_number из карточки оператора).
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  // Россия: '8XXX...' → '7XXX...'
+  if (digits.length === 11 && digits.startsWith("8")) return "7" + digits.slice(1);
+  return digits;
 }
 
 // Строка с UID + кнопкой «Скопировать ссылку на вызов».
