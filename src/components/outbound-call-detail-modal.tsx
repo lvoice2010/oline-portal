@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  OUTBOUND_STATUS_LABEL,
   type OutboundCall,
   type OutboundCallStatus,
 } from "@/lib/mock-data";
@@ -22,11 +21,30 @@ import {
   UidRow,
 } from "@/components/call-detail-modal";
 
-const STATUS_COLOR: Record<OutboundCallStatus, string> = {
-  target: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  reached: "bg-sky-50 text-sky-700 border border-sky-200",
-  not_reached: "bg-rose-50 text-rose-700 border border-rose-200",
-};
+// Бейдж статуса — двухуровневый: L1 (дозвон/нет дозвона), L2 (целевое/без целевого)
+function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
+  if (status === "not_reached") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-medium text-rose-700">
+        Нет дозвона
+      </span>
+    );
+  }
+  const isTarget = status === "target";
+  return (
+    <span className="inline-flex items-center overflow-hidden rounded-full border border-sky-200 bg-sky-50 text-[11px] font-medium">
+      <span className="px-2.5 py-0.5 text-sky-700">Дозвон</span>
+      <span
+        className={cn(
+          "px-2.5 py-0.5",
+          isTarget ? "bg-emerald-500 text-white" : "bg-sky-100 text-sky-700/80"
+        )}
+      >
+        {isTarget ? "Целевое" : "Без целевого"}
+      </span>
+    </span>
+  );
+}
 
 function fmtDuration(sec: number): string {
   if (sec <= 0) return "—";
@@ -70,14 +88,7 @@ export function OutboundCallDetailModal({
               <h2 className="text-base font-semibold text-navy">
                 Просмотр исходящего · {call.date} {call.time}
               </h2>
-              <span
-                className={cn(
-                  "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                  STATUS_COLOR[call.status]
-                )}
-              >
-                {OUTBOUND_STATUS_LABEL[call.status]}
-              </span>
+              <TwoLevelStatusBadge status={call.status} />
               <span className="rounded-full border border-navy/15 bg-navy-50 px-2.5 py-0.5 text-[11px] font-medium text-navy/70">
                 Попытка {call.attempt}/3
               </span>
@@ -126,7 +137,13 @@ export function OutboundCallDetailModal({
                   {call.topic && <Row label="Тема исхода" value={call.topic} />}
                   <Row
                     label="Статус"
-                    value={OUTBOUND_STATUS_LABEL[call.status]}
+                    value={
+                      call.status === "not_reached"
+                        ? "Нет дозвона"
+                        : call.status === "target"
+                        ? "Дозвон → Целевое"
+                        : "Дозвон → Без целевого"
+                    }
                   />
                 </div>
               </div>

@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
   outboundCalls,
-  OUTBOUND_STATUS_LABEL,
   type OutboundCall,
   type OutboundCallStatus,
 } from "@/lib/mock-data";
@@ -20,12 +19,6 @@ const PERIODS = [
 ] as const;
 type Period = (typeof PERIODS)[number]["id"];
 
-const STATUS_COLOR: Record<OutboundCallStatus, string> = {
-  target: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  reached: "bg-sky-50 text-sky-700 border border-sky-200",
-  not_reached: "bg-rose-50 text-rose-700 border border-rose-200",
-};
-
 function fmtDuration(sec: number): string {
   if (sec < 60) return `${sec} сек`;
   const m = Math.floor(sec / 60);
@@ -38,8 +31,16 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   const [customFrom, setCustomFrom] = React.useState<string>("");
   const [customTo, setCustomTo] = React.useState<string>("");
   const [customOpen, setCustomOpen] = React.useState(false);
-  const [statusFilter, setStatusFilter] =
-    React.useState<"all" | OutboundCallStatus>("all");
+  // Два уровня фильтрации, отражающих реальную бизнес-структуру:
+  // 1) Дозвон / Нет дозвона — состоялся ли вообще разговор
+  // 2) Исход разговора — только внутри дозвонившихся:
+  //    целевое (продали / договорились) или без целевого (возражение / отказ)
+  const [dialFilter, setDialFilter] = React.useState<
+    "all" | "reached" | "not_reached"
+  >("all");
+  const [outcomeFilter, setOutcomeFilter] = React.useState<
+    "all" | "target" | "non_target"
+  >("all");
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<OutboundCall | null>(null);
 
@@ -60,7 +61,14 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   });
 
   const filtered = inPeriod.filter((c) => {
-    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    // L1: дозвон / нет дозвона
+    if (dialFilter === "reached" && c.status === "not_reached") return false;
+    if (dialFilter === "not_reached" && c.status !== "not_reached") return false;
+    // L2: исход разговора — учитывается только если дозвонились
+    if (c.status !== "not_reached") {
+      if (outcomeFilter === "target" && c.status !== "target") return false;
+      if (outcomeFilter === "non_target" && c.status === "target") return false;
+    }
     if (search) {
       const q = search.toLowerCase();
       if (
@@ -75,6 +83,7 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   const total = inPeriod.length;
   const targets = inPeriod.filter((c) => c.status === "target").length;
   const reached = inPeriod.filter((c) => c.status === "reached" || c.status === "target").length;
+  const nonTarget = reached - targets; // дозвонились, но без целевого
   const notReached = inPeriod.filter((c) => c.status === "not_reached").length;
   const reachedPct = total > 0 ? Math.round((reached / total) * 100) : 0;
   const conversionPct = reached > 0 ? Math.round((targets / reached) * 100) : 0;
@@ -89,33 +98,67 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
 
   return (
     <div className="space-y-5">
-      {/* Сводка */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Всего звонков</p>
-          <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Дозвон</p>
-          <p className="mt-1 text-2xl font-semibold text-sky-600">{reached}</p>
-          <p className="text-[10px] text-navy/45">{reachedPct}% от попыток</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Нет дозвона</p>
-          <p
-            className={cn(
-              "mt-1 text-2xl font-semibold",
-              notReached > 0 ? "text-rose-600" : "text-navy"
-            )}
-          >
-            {notReached}
+      {/* Сводка — два уровня:
+          L1 — Дозваниваемость (всего/дозвон/нет дозвона)
+          L2 — Исход (внутри дозвонившихся: целевые / без целевого) */}
+      <div className="space-y-4">
+        <section>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-navy/45">
+            1. Дозваниваемость
           </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Целевых действий</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-600">{targets}</p>
-          <p className="text-[10px] text-navy/45">конверсия {conversionPct}%</p>
-        </Card>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Card className="p-4">
+              <p className="text-xs text-navy/55">Всего попыток</p>
+              <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-navy/55">Дозвон</p>
+              <p className="mt-1 text-2xl font-semibold text-sky-600">
+                {reached}
+              </p>
+              <p className="text-[10px] text-navy/45">
+                {reachedPct}% от попыток
+              </p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-navy/55">Нет дозвона</p>
+              <p
+                className={cn(
+                  "mt-1 text-2xl font-semibold",
+                  notReached > 0 ? "text-rose-600" : "text-navy"
+                )}
+              >
+                {notReached}
+              </p>
+            </Card>
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-navy/45">
+            2. Исход — из {reached} дозвонившихся
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Card className="p-4">
+              <p className="text-xs text-navy/55">Целевых действий</p>
+              <p className="mt-1 text-2xl font-semibold text-emerald-600">
+                {targets}
+              </p>
+              <p className="text-[10px] text-navy/45">
+                конверсия {conversionPct}% от дозвонившихся
+              </p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-navy/55">Без целевого</p>
+              <p className="mt-1 text-2xl font-semibold text-navy">
+                {nonTarget}
+              </p>
+              <p className="text-[10px] text-navy/45">
+                возражения / отказы / перенос
+              </p>
+            </Card>
+          </div>
+        </section>
       </div>
 
       {/* Фильтры */}
@@ -180,28 +223,76 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
           )}
         </div>
 
-        <div className="flex gap-1 rounded-xl border border-navy/15 bg-white p-1">
-          {(
-            [
-              { id: "all" as const, label: "Все" },
-              { id: "target" as const, label: "Целевые" },
-              { id: "reached" as const, label: "Дозвон" },
-              { id: "not_reached" as const, label: "Нет дозвона" },
-            ] as { id: "all" | OutboundCallStatus; label: string }[]
-          ).map((o) => (
-            <button
-              key={o.id}
-              onClick={() => setStatusFilter(o.id)}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm transition-colors",
-                statusFilter === o.id
-                  ? "bg-navy text-white"
-                  : "text-navy/65 hover:bg-navy-50"
-              )}
-            >
-              {o.label}
-            </button>
-          ))}
+        {/* L1: Дозвон / Нет дозвона */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-navy/45">
+            Дозвон
+          </span>
+          <div className="flex gap-1 rounded-xl border border-navy/15 bg-white p-1">
+            {(
+              [
+                { id: "all" as const, label: "Все" },
+                { id: "reached" as const, label: "Дозвон" },
+                { id: "not_reached" as const, label: "Нет дозвона" },
+              ]
+            ).map((o) => (
+              <button
+                key={o.id}
+                onClick={() => {
+                  setDialFilter(o.id);
+                  // если ушли в «Нет дозвона» — сбрасываем фильтр исхода
+                  if (o.id === "not_reached") setOutcomeFilter("all");
+                }}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm transition-colors",
+                  dialFilter === o.id
+                    ? "bg-navy text-white"
+                    : "text-navy/65 hover:bg-navy-50"
+                )}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* L2: Исход — активен только когда есть дозвонившиеся */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-navy/45">
+            Исход
+          </span>
+          <div
+            className={cn(
+              "flex gap-1 rounded-xl border border-navy/15 bg-white p-1",
+              dialFilter === "not_reached" && "opacity-40 pointer-events-none"
+            )}
+            title={
+              dialFilter === "not_reached"
+                ? "Недоступно: при «Нет дозвона» исхода не было"
+                : undefined
+            }
+          >
+            {(
+              [
+                { id: "all" as const, label: "Все" },
+                { id: "target" as const, label: "Целевые" },
+                { id: "non_target" as const, label: "Без целевого" },
+              ]
+            ).map((o) => (
+              <button
+                key={o.id}
+                onClick={() => setOutcomeFilter(o.id)}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm transition-colors",
+                  outcomeFilter === o.id
+                    ? "bg-navy text-white"
+                    : "text-navy/65 hover:bg-navy-50"
+                )}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="relative ml-auto">
@@ -275,14 +366,7 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                        STATUS_COLOR[c.status]
-                      )}
-                    >
-                      {OUTBOUND_STATUS_LABEL[c.status]}
-                    </span>
+                    <TwoLevelStatusBadge status={c.status} />
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-navy">
                     {c.durationSec > 0 ? fmtDuration(c.durationSec) : "—"}
@@ -317,5 +401,35 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
         call={selected}
       />
     </div>
+  );
+}
+
+// Двухуровневый бейдж статуса — отражает реальную иерархию:
+//   L1 (дозвонились?) Дозвон / Нет дозвона
+//   L2 (если дозвонились) — Целевое или Без целевого
+function TwoLevelStatusBadge({ status }: { status: OutboundCallStatus }) {
+  if (status === "not_reached") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
+        Нет дозвона
+      </span>
+    );
+  }
+  // status: reached / target → оба «дозвон», отличаются исходом
+  const isTarget = status === "target";
+  return (
+    <span className="inline-flex items-center overflow-hidden rounded-full border border-sky-200 bg-sky-50 text-[11px] font-medium">
+      <span className="px-2 py-0.5 text-sky-700">Дозвон</span>
+      <span
+        className={cn(
+          "px-2 py-0.5",
+          isTarget
+            ? "bg-emerald-500 text-white"
+            : "bg-sky-100 text-sky-700/80"
+        )}
+      >
+        {isTarget ? "Целевое" : "Без целевого"}
+      </span>
+    </span>
   );
 }
