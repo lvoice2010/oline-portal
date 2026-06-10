@@ -100,8 +100,36 @@ function renderContent(text: string): React.ReactNode {
   ));
 }
 
-export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
+// variant отличается только текстом подписей — структура и поведение те же.
+// "script"    — скрипт оператора (для голосовых линий)
+// "knowledge" — база знаний (для нейроассистента: бот работает не по скрипту,
+//               а по «корпусу знаний», но визуально это та же портянка)
+export function ServiceScriptTab({
+  serviceId,
+  variant = "script",
+}: {
+  serviceId: string;
+  variant?: "script" | "knowledge";
+}) {
   const script = serviceScripts[serviceId];
+  const labels =
+    variant === "knowledge"
+      ? {
+          eyebrow: "База знаний нейроассистента",
+          downloadPrefix: "База_знаний",
+          footerTitle: "Нужно обновить базу знаний?",
+          footerBody:
+            "База знаний обновляется по согласованию с менеджером. Все правки тестируются на выборке диалогов перед публикацией для всех клиентов.",
+          countLabel: "Раскрывающихся тем:",
+        }
+      : {
+          eyebrow: "Скрипт оператора",
+          downloadPrefix: "Скрипт",
+          footerTitle: "Нужно изменить скрипт?",
+          footerBody:
+            "Скрипт обновляется по согласованию с вашим менеджером. Все правки проходят утверждение и тестируются на выборке диалогов.",
+          countLabel: "Раскрывающихся блоков:",
+        };
 
   // Какие разворачивающиеся блоки открыты (индекс в массиве blocks)
   const [openIdx, setOpenIdx] = React.useState<Set<number>>(new Set());
@@ -144,7 +172,7 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-copper">
-              <Sparkles size={12} /> Скрипт оператора
+              <Sparkles size={12} /> {labels.eyebrow}
             </p>
             <h2 className="mt-1 text-lg font-semibold text-navy">
               {script.serviceName}
@@ -159,7 +187,7 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
             </span>
             <a
               href="/sample-invoice.pdf"
-              download={`Скрипт_${script.serviceName.replace(/\s+/g, "_")}_v${script.version}.pdf`}
+              download={`${labels.downloadPrefix}_${script.serviceName.replace(/\s+/g, "_")}_v${script.version}.pdf`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-navy/15 bg-white px-3 py-1.5 text-xs font-medium text-navy/75 transition-colors hover:border-copper hover:text-copper"
             >
               <Download size={13} /> Скачать PDF
@@ -191,7 +219,7 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
           Свернуть все
         </button>
         <span className="ml-auto text-navy/55">
-          Раскрывающихся блоков:{" "}
+          {labels.countLabel}{" "}
           <span className="font-semibold text-navy">{expandableCount}</span>
         </span>
       </div>
@@ -221,12 +249,9 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
       <Card className="flex flex-wrap items-center justify-between gap-4 border-sky-200 bg-sky-50/60 p-5">
         <div>
           <p className="text-sm font-semibold text-sky-900">
-            Нужно изменить скрипт?
+            {labels.footerTitle}
           </p>
-          <p className="mt-1 text-sm text-sky-800/85">
-            Скрипт обновляется по согласованию с вашим менеджером. Все правки
-            проходят утверждение и тестируются на выборке диалогов.
-          </p>
+          <p className="mt-1 text-sm text-sky-800/85">{labels.footerBody}</p>
         </div>
         <a
           href="/messages"

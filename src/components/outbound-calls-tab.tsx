@@ -90,7 +90,7 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   return (
     <div className="space-y-5">
       {/* Сводка */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs text-navy/55">Всего звонков</p>
           <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
@@ -115,16 +115,6 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
           <p className="text-xs text-navy/55">Целевых действий</p>
           <p className="mt-1 text-2xl font-semibold text-emerald-600">{targets}</p>
           <p className="text-[10px] text-navy/45">конверсия {conversionPct}%</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Средняя длительность</p>
-          <p className="mt-1 text-2xl font-semibold text-navy">
-            {fmtDuration(
-              total > 0
-                ? Math.round(inPeriod.reduce((s, c) => s + c.durationSec, 0) / total)
-                : 0
-            )}
-          </p>
         </Card>
       </div>
 

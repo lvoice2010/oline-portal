@@ -20,6 +20,7 @@ import {
   Download,
   FolderArchive,
   ScrollText,
+  BookOpen,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,7 @@ import { ServiceScriptTab } from "@/components/service-script-tab";
 const TAB_REPORTS = { id: "reports", label: "Отчёты", icon: BarChart3 } as const;
 const TAB_ANALYTICS = { id: "analytics", label: "Аналитика", icon: LineChart } as const;
 const TAB_SCRIPT = { id: "script", label: "Скрипт", icon: ScrollText } as const;
+const TAB_KB = { id: "kb", label: "База знаний", icon: BookOpen } as const;
 const TAB_CALLS = { id: "calls", label: "Вызовы", icon: PhoneCall } as const;
 const TAB_DIALOGS = { id: "dialogs", label: "Диалоги", icon: PhoneCall } as const;
 const TAB_RECOMMENDATIONS = {
@@ -61,10 +63,10 @@ function getTabsForService(serviceId: string) {
   if (serviceId === "quarter-report") {
     return [TAB_RECOMMENDATIONS];
   }
-  // Нейроассистент — диалоги вместо звонков и без вкладки «Скрипт»
-  // (ассистент работает по промптам, а не по скрипту оператора)
+  // Нейроассистент — вместо «Скрипта» (бот работает не по скрипту)
+  // отдельная вкладка «База знаний» — корпус тем, по которым ИИ отвечает.
   if (serviceId === "chatbot") {
-    return [TAB_REPORTS, TAB_ANALYTICS, TAB_DIALOGS];
+    return [TAB_REPORTS, TAB_ANALYTICS, TAB_KB, TAB_DIALOGS];
   }
   // Голосовые линии: добавляем «Скрипт» между аналитикой и вызовами
   return [TAB_REPORTS, TAB_ANALYTICS, TAB_SCRIPT, TAB_CALLS];
@@ -74,6 +76,7 @@ type TabId =
   | typeof TAB_REPORTS.id
   | typeof TAB_ANALYTICS.id
   | typeof TAB_SCRIPT.id
+  | typeof TAB_KB.id
   | typeof TAB_CALLS.id
   | typeof TAB_DIALOGS.id
   | typeof TAB_RECOMMENDATIONS.id;
@@ -316,6 +319,9 @@ export default function ServiceDetailPage({
       {/* Содержимое таба */}
       {tab === "recommendations" && <QuarterlyReportTab />}
       {tab === "script" && <ServiceScriptTab serviceId={service.id} />}
+      {tab === "kb" && (
+        <ServiceScriptTab serviceId={service.id} variant="knowledge" />
+      )}
       {tab === "calls" &&
         (service.id === "outbound-q2" ? (
           <OutboundCallsTab serviceId={service.id} />
