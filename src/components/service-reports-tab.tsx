@@ -24,7 +24,14 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { serviceReports, type ReportTone, type ServiceReport } from "@/lib/mock-data";
+import {
+  serviceReports,
+  calls,
+  dialogs,
+  type ReportTone,
+  type ServiceReport,
+} from "@/lib/mock-data";
+import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
 const NAVY = "#1F5240";
 const SAGE = "#7CB342";
@@ -67,6 +74,36 @@ const PERIOD_OPTIONS: { id: PeriodKey; label: string }[] = [
   { id: "custom", label: "Период" },
 ];
 
+// «DD.MM.YYYY» → попадает ли запись в выбранный период.
+// Используется для фильтрации звонков/диалогов в блоке тем обращений.
+function isInPeriod(
+  dateStr: string,
+  period: PeriodKey,
+  customFrom: string,
+  customTo: string
+): boolean {
+  const [d, m, y] = dateStr.split(".").map(Number);
+  const itemDate = new Date(y, m - 1, d);
+  const now = new Date();
+  const day = 86400000;
+  if (period === "today") return itemDate >= new Date(now.getTime() - day);
+  if (period === "yesterday") {
+    const start = new Date(now.getTime() - 2 * day);
+    const end = new Date(now.getTime() - day);
+    return itemDate >= start && itemDate < end;
+  }
+  if (period === "week") return itemDate >= new Date(now.getTime() - 7 * day);
+  if (period === "month") return itemDate >= new Date(now.getTime() - 31 * day);
+  if (period === "custom") {
+    const from = customFrom ? new Date(customFrom) : null;
+    const to = customTo ? new Date(`${customTo}T23:59:59`) : null;
+    if (from && itemDate < from) return false;
+    if (to && itemDate > to) return false;
+    return true;
+  }
+  return true;
+}
+
 export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   const report = serviceReports[serviceId];
   const [momMode, setMomMode] = React.useState<"closed" | "mtd">("closed");
@@ -85,6 +122,10 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   }
 
   const heatMax = Math.max(...report.heatmap.data.flat());
+
+  // Для нейроассистента темы считаются по диалогам, для голосовых линий — по звонкам.
+  // Фильтрация по периоду живёт прямо в JSX-блоке ниже (разные типы — разные ветки).
+  const isChatbot = serviceId === "chatbot";
 
   return (
     <div className="space-y-6">
@@ -590,6 +631,31 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
           </div>
         </div>
       </Card>
+
+      {/* Темы обращений — распределение ИИ-карточек по категориям */}
+      {isChatbot ? (
+        <AiTopicsBreakdown
+          items={dialogs.filter(
+            (d) =>
+              d.serviceId === serviceId &&
+              isInPeriod(d.date, period, customFrom, customTo)
+          )}
+          itemNoun="диалогов"
+          getCategory={(it) => it.ai?.category}
+          getSubcategory={(it) => it.ai?.subcategory}
+        />
+      ) : (
+        <AiTopicsBreakdown
+          items={calls.filter(
+            (c) =>
+              c.serviceId === serviceId &&
+              isInPeriod(c.date, period, customFrom, customTo)
+          )}
+          itemNoun="звонков"
+          getCategory={(it) => it.ai?.category}
+          getSubcategory={(it) => it.ai?.subcategory}
+        />
+      )}
 
       {/* Отчёт за год */}
       {report.yearlyReports && <YearlyReportTable yearlyReports={report.yearlyReports} />}
