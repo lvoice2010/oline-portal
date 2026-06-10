@@ -9,9 +9,6 @@ import {
   Download,
   PhoneCall,
   Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  Info,
   User2,
   Headphones,
   Link as LinkIcon,
@@ -26,12 +23,6 @@ function fmtTime(sec: number) {
   const s = sec % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
-
-const TRIGGER_ICON = {
-  ok: { Icon: CheckCircle2, color: "text-emerald-500" },
-  warn: { Icon: AlertTriangle, color: "text-amber-500" },
-  info: { Icon: Info, color: "text-sky-500" },
-} as const;
 
 function AudioPlayerStub({ duration }: { duration: number }) {
   const [playing, setPlaying] = React.useState(false);
@@ -223,25 +214,6 @@ export function CallDetailModal({
                   </div>
                 </div>
 
-                <div>
-                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
-                    Триггеры
-                  </p>
-                  <ul className="space-y-2">
-                    {call.ai.triggers.map((t, i) => {
-                      const { Icon, color } = TRIGGER_ICON[t.tone];
-                      return (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 rounded-lg bg-navy-50/50 px-3 py-2 text-xs text-navy/80"
-                        >
-                          <Icon size={13} className={cn("mt-0.5 shrink-0", color)} />
-                          <span>{t.label}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
               </>
             ) : (
               <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
