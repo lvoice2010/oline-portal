@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, Eye, FileSpreadsheet } from "lucide-react";
+import { FileText, Eye, FileSpreadsheet, Search, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -68,14 +68,22 @@ export default function DocumentsPage() {
   const [year, setYear] = React.useState<string>(YEARS[0]);
   const [type, setType] = React.useState<"Все" | DocType>("Все");
   const [status, setStatus] = React.useState<"Все" | DocStatus>("Все");
+  const [search, setSearch] = React.useState<string>("");
   const [preview, setPreview] = React.useState<{ title: string; url: string } | null>(null);
 
-  const filtered = documents.filter(
-    (d) =>
-      d.date.endsWith(year) &&
-      (type === "Все" || d.type === type) &&
-      (status === "Все" || d.status === status)
-  );
+  // Если есть поиск — игнорируем фильтр по году (ищем по всем).
+  // Иначе ищем в рамках выбранного года.
+  const searchTrimmed = search.trim().toLowerCase();
+  const filtered = documents.filter((d) => {
+    if (!searchTrimmed && !d.date.endsWith(year)) return false;
+    if (type !== "Все" && d.type !== type) return false;
+    if (status !== "Все" && d.status !== status) return false;
+    if (searchTrimmed) {
+      const haystack = `${d.type} ${d.number}`.toLowerCase();
+      if (!haystack.includes(searchTrimmed)) return false;
+    }
+    return true;
+  });
 
   const totalInvoices = filtered
     .filter((d) => d.type === "Счёт")
@@ -145,7 +153,33 @@ export default function DocumentsPage() {
         <Pills value={year} options={YEARS} onChange={setYear} />
         <Pills value={type} options={TYPES} onChange={setType} />
         <Pills value={status} options={STATUSES} onChange={setStatus} />
+        <div className="relative ml-auto">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/40"
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Найти счёт или акт по номеру"
+            className="w-72 rounded-xl border border-navy/15 bg-white py-2 pl-9 pr-9 text-sm text-navy outline-none focus:border-copper"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Очистить поиск"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-navy/40 hover:bg-navy-50 hover:text-navy"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
       </div>
+      {search && (
+        <p className="-mt-3 text-xs text-navy/55">
+          Поиск идёт по всем годам — фильтр по году игнорируется.
+        </p>
+      )}
 
       {/* Таблица */}
       <Card className="overflow-hidden">
