@@ -74,35 +74,6 @@ const PERIOD_OPTIONS: { id: PeriodKey; label: string }[] = [
   { id: "custom", label: "Период" },
 ];
 
-// «DD.MM.YYYY» → попадает ли запись в выбранный период.
-// Используется для фильтрации звонков/диалогов в блоке тем обращений.
-function isInPeriod(
-  dateStr: string,
-  period: PeriodKey,
-  customFrom: string,
-  customTo: string
-): boolean {
-  const [d, m, y] = dateStr.split(".").map(Number);
-  const itemDate = new Date(y, m - 1, d);
-  const now = new Date();
-  const day = 86400000;
-  if (period === "today") return itemDate >= new Date(now.getTime() - day);
-  if (period === "yesterday") {
-    const start = new Date(now.getTime() - 2 * day);
-    const end = new Date(now.getTime() - day);
-    return itemDate >= start && itemDate < end;
-  }
-  if (period === "week") return itemDate >= new Date(now.getTime() - 7 * day);
-  if (period === "month") return itemDate >= new Date(now.getTime() - 31 * day);
-  if (period === "custom") {
-    const from = customFrom ? new Date(customFrom) : null;
-    const to = customTo ? new Date(`${customTo}T23:59:59`) : null;
-    if (from && itemDate < from) return false;
-    if (to && itemDate > to) return false;
-    return true;
-  }
-  return true;
-}
 
 export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   const report = serviceReports[serviceId];
@@ -632,26 +603,21 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
         </div>
       </Card>
 
-      {/* Темы обращений — распределение ИИ-карточек по категориям */}
+      {/* Темы обращений — распределение ИИ-карточек по категориям.
+          У блока собственный селектор периода, не привязан к шапке услуги. */}
       {isChatbot ? (
         <AiTopicsBreakdown
-          items={dialogs.filter(
-            (d) =>
-              d.serviceId === serviceId &&
-              isInPeriod(d.date, period, customFrom, customTo)
-          )}
+          items={dialogs.filter((d) => d.serviceId === serviceId)}
           itemNoun="диалогов"
+          getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}
           getSubcategory={(it) => it.ai?.subcategory}
         />
       ) : (
         <AiTopicsBreakdown
-          items={calls.filter(
-            (c) =>
-              c.serviceId === serviceId &&
-              isInPeriod(c.date, period, customFrom, customTo)
-          )}
+          items={calls.filter((c) => c.serviceId === serviceId)}
           itemNoun="звонков"
+          getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}
           getSubcategory={(it) => it.ai?.subcategory}
         />

@@ -8,6 +8,47 @@ import { cn } from "@/lib/utils";
 // Одна строка распределения: значение + сколько раз встретилось + %
 type TopicCount = { value: string; count: number; pct: number };
 
+// Период независимый от шапки услуги — клиент может сравнивать
+// KPI за месяц с темами за неделю и т.п.
+type Period = "today" | "yesterday" | "week" | "month" | "custom";
+
+const PERIOD_OPTIONS: { id: Period; label: string }[] = [
+  { id: "today", label: "Сегодня" },
+  { id: "yesterday", label: "Вчера" },
+  { id: "week", label: "Неделя" },
+  { id: "month", label: "Месяц" },
+  { id: "custom", label: "Период" },
+];
+
+// Парсит «DD.MM.YYYY» в Date и проверяет, попадает ли в выбранный период.
+function isInPeriod(
+  dateStr: string,
+  period: Period,
+  customFrom: string,
+  customTo: string
+): boolean {
+  const [d, m, y] = dateStr.split(".").map(Number);
+  const itemDate = new Date(y, m - 1, d);
+  const now = new Date();
+  const day = 86400000;
+  if (period === "today") return itemDate >= new Date(now.getTime() - day);
+  if (period === "yesterday") {
+    const start = new Date(now.getTime() - 2 * day);
+    const end = new Date(now.getTime() - day);
+    return itemDate >= start && itemDate < end;
+  }
+  if (period === "week") return itemDate >= new Date(now.getTime() - 7 * day);
+  if (period === "month") return itemDate >= new Date(now.getTime() - 31 * day);
+  if (period === "custom") {
+    const from = customFrom ? new Date(customFrom) : null;
+    const to = customTo ? new Date(`${customTo}T23:59:59`) : null;
+    if (from && itemDate < from) return false;
+    if (to && itemDate > to) return false;
+    return true;
+  }
+  return true;
+}
+
 function groupByKey<T>(
   items: T[],
   getKey: (it: T) => string | undefined,
@@ -33,21 +74,36 @@ function groupByKey<T>(
 // ai.category / ai.subcategory. Воспроизводит вид служебного
 // отчёта из старого кабинета (Значение / Количество / Проценты),
 // разбитого на два столбца: категории и подкатегории.
+//
+// Период живёт внутри блока — отдельно от шапки услуги,
+// чтобы можно было сравнивать KPI за месяц с темами за неделю.
 export function AiTopicsBreakdown<T>({
   items,
   itemNoun,
+  getDate,
   getCategory,
   getSubcategory,
 }: {
   items: T[];
   itemNoun: string; // "карточек" / "звонков" / "диалогов"
+  getDate: (it: T) => string; // «DD.MM.YYYY»
   getCategory: (it: T) => string | undefined;
   getSubcategory: (it: T) => string | undefined;
 }) {
-  // База — только элементы, у которых ИИ-карточка сформирована
+  const [period, setPeriod] = React.useState<Period>("month");
+  const [customFrom, setCustomFrom] = React.useState("");
+  const [customTo, setCustomTo] = React.useState("");
+  const [customOpen, setCustomOpen] = React.useState(false);
+
+  // Сначала отрезаем по периоду, потом оставляем только с ИИ-карточкой
+  const inPeriod = React.useMemo(
+    () =>
+      items.filter((it) => isInPeriod(getDate(it), period, customFrom, customTo)),
+    [items, period, customFrom, customTo, getDate]
+  );
   const withAi = React.useMemo(
-    () => items.filter((it) => !!getCategory(it)),
-    [items, getCategory]
+    () => inPeriod.filter((it) => !!getCategory(it)),
+    [inPeriod, getCategory]
   );
   const total = withAi.length;
   const cats = React.useMemo(
@@ -59,15 +115,6 @@ export function AiTopicsBreakdown<T>({
     [withAi, getSubcategory, total]
   );
 
-  if (total === 0) {
-    return (
-      <Card className="p-6 text-center text-sm text-navy/55">
-        За выбранный период нет {itemNoun} с ИИ-карточкой — нечего
-        анализировать по темам.
-      </Card>
-    );
-  }
-
   return (
     <Card className="space-y-5 p-5">
       <div className="flex flex-wrap items-center gap-3">
@@ -78,14 +125,119 @@ export function AiTopicsBreakdown<T>({
         <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[11px] font-medium text-sky-700">
           Всего {itemNoun}: {total.toLocaleString("ru-RU")}
         </span>
-        <span className="ml-auto text-[11px] text-navy/55">
-          Автоматическая классификация ИИ — обновляется по мере поступления звонков
+        <span className="hidden text-[11px] text-navy/55 xl:inline">
+          Автоматическая классификация ИИ
         </span>
+
+        {/* Селектор периода — независимый от шапки услуги */}
+        <div className="relative ml-auto">
+          <div className="flex gap-1 rounded-xl border border-navy/15 bg-white p-1">
+            {PERIOD_OPTIONS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  if (p.id === "custom") {
+                    if (period === "custom") setCustomOpen((v) => !v);
+                    else {
+                      setPeriod("custom");
+                      setCustomOpen(true);
+                    }
+                  } else {
+                    setPeriod(p.id);
+                    setCustomOpen(false);
+                  }
+                }}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  period === p.id
+                    ? "bg-navy text-white"
+                    : "text-navy/65 hover:bg-navy-50"
+                )}
+              >
+                {p.label}
+                {p.id === "custom" &&
+                  period === "custom" &&
+                  customFrom &&
+                  customTo && (
+                    <span className="ml-1.5 text-[10px] opacity-75">
+                      ·{" "}
+                      {customFrom.split("-").reverse().join(".")} –{" "}
+                      {customTo.split("-").reverse().join(".")}
+                    </span>
+                  )}
+              </button>
+            ))}
+          </div>
+          {customOpen && period === "custom" && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setCustomOpen(false)}
+              />
+              <div className="absolute right-0 z-20 mt-2 w-72 rounded-card border border-navy/10 bg-white p-4 shadow-soft-lg">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                  Выберите период
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-navy/55">
+                      От
+                    </label>
+                    <input
+                      type="date"
+                      value={customFrom}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm text-navy outline-none focus:border-copper"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-navy/55">
+                      До
+                    </label>
+                    <input
+                      type="date"
+                      value={customTo}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm text-navy outline-none focus:border-copper"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomFrom("");
+                      setCustomTo("");
+                    }}
+                    className="text-xs font-medium text-navy/55 hover:text-navy"
+                  >
+                    Сбросить
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomOpen(false)}
+                    className="rounded-lg bg-copper px-3 py-1.5 text-xs font-medium text-white hover:bg-copper-light"
+                  >
+                    Применить
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <TopicTable title="По категориям" rows={cats} />
-        <TopicTable title="По подкатегориям" rows={subs} />
-      </div>
+
+      {total === 0 ? (
+        <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/55">
+          За выбранный период нет {itemNoun} с ИИ-карточкой — нечего анализировать
+          по темам.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <TopicTable title="По категориям" rows={cats} />
+          <TopicTable title="По подкатегориям" rows={subs} />
+        </div>
+      )}
     </Card>
   );
 }
