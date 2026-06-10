@@ -24,7 +24,7 @@ function fmtTime(sec: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function AudioPlayerStub({ duration }: { duration: number }) {
+export function AudioPlayerStub({ duration }: { duration: number }) {
   const [playing, setPlaying] = React.useState(false);
   const [pos, setPos] = React.useState(0);
 
@@ -310,7 +310,7 @@ function Row({
 
 // Поле в ИИ-карточке: жирный лейбл сверху, значение под ним.
 // Такой вид привычен оператору — повторяет вёрстку их рабочей админки.
-function AiField({
+export function AiField({
   label,
   value,
   mono = false,
@@ -340,7 +340,7 @@ function AiField({
 // Полоса прогресса «Соответствие диалога скрипту».
 // Цвет заливки — по порогу: 90+ зелёный, 75–89 янтарный, < 75 розовый.
 // Фон всегда тёмный — текст белый поверх читается одинаково при любом %.
-function ScriptMatchBar({ value }: { value: number }) {
+export function ScriptMatchBar({ value }: { value: number }) {
   const clamped = Math.max(0, Math.min(100, value));
   const tone =
     clamped >= 90
@@ -369,7 +369,7 @@ function ScriptMatchBar({ value }: { value: number }) {
 // Преобразуем «+7 (495) 555-12-12» / «8 999 ...» → «74955551212» —
 // именно в таком виде номер хранится во внутренних системах
 // (поле phone_number из карточки оператора).
-function normalizePhone(raw: string): string {
+export function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   // Россия: '8XXX...' → '7XXX...'
   if (digits.length === 11 && digits.startsWith("8")) return "7" + digits.slice(1);

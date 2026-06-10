@@ -7,8 +7,10 @@ import { cn } from "@/lib/utils";
 import {
   outboundCalls,
   OUTBOUND_STATUS_LABEL,
+  type OutboundCall,
   type OutboundCallStatus,
 } from "@/lib/mock-data";
+import { OutboundCallDetailModal } from "@/components/outbound-call-detail-modal";
 
 const PERIODS = [
   { id: "today", label: "Сегодня" },
@@ -39,6 +41,7 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   const [statusFilter, setStatusFilter] =
     React.useState<"all" | OutboundCallStatus>("all");
   const [search, setSearch] = React.useState("");
+  const [selected, setSelected] = React.useState<OutboundCall | null>(null);
 
   const serviceCalls = outboundCalls.filter((c) => c.serviceId === serviceId);
   const now = new Date();
@@ -237,12 +240,13 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
                 <th className="px-4 py-3 font-medium text-center">Попытка</th>
                 <th className="px-4 py-3 font-medium">Статус</th>
                 <th className="px-4 py-3 font-medium text-right">Длительность</th>
+                <th className="px-4 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-navy/45">
+                  <td colSpan={7} className="px-4 py-12 text-center text-navy/45">
                     По текущему фильтру звонков нет
                   </td>
                 </tr>
@@ -250,7 +254,8 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
               {filtered.map((c) => (
                 <tr
                   key={c.id}
-                  className="border-b border-navy/[0.04] transition-colors hover:bg-navy-50/40 last:border-0"
+                  onClick={() => setSelected(c)}
+                  className="cursor-pointer border-b border-navy/[0.04] transition-colors hover:bg-navy-50/40 last:border-0"
                 >
                   <td className="whitespace-nowrap px-4 py-3 text-navy/80">
                     <div>{c.date}</div>
@@ -292,6 +297,17 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
                   <td className="px-4 py-3 text-right tabular-nums text-navy">
                     {c.durationSec > 0 ? fmtDuration(c.durationSec) : "—"}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelected(c);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-navy/15 bg-white px-2.5 py-1 text-[11px] font-medium text-navy hover:border-copper hover:text-copper"
+                    >
+                      <Eye size={11} /> Открыть
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -304,6 +320,12 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
           </span>
         </div>
       </Card>
+
+      <OutboundCallDetailModal
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        call={selected}
+      />
     </div>
   );
 }
