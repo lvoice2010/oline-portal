@@ -2,38 +2,109 @@
 
 import * as React from "react";
 import {
-  Headset,
-  User2,
-  Info,
-  AlertTriangle,
-  CheckCircle2,
   ChevronDown,
   Calendar,
   ShieldCheck,
   Sparkles,
   Download,
+  AlertTriangle,
+  Info,
+  CheckCircle2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
   serviceScripts,
-  type ScriptSection,
-  type ScriptStep,
+  type ScriptBlock,
+  type ScriptBlockTone,
+  type CalloutTone,
 } from "@/lib/mock-data";
 
-const TONE_STYLE = {
-  info: { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-800", iconColor: "text-sky-600", Icon: Info },
-  warn: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-800", iconColor: "text-amber-600", Icon: AlertTriangle },
-  ok: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-800", iconColor: "text-emerald-600", Icon: CheckCircle2 },
-} as const;
+// Цвета разворачивающихся кнопок — крупный, как на бумажной портянке.
+// Каждый тон — это смысловой код (см. mock-data.ts).
+const TONE_BUTTON: Record<ScriptBlockTone, string> = {
+  green:
+    "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white",
+  blue:
+    "bg-sky-500 hover:bg-sky-600 border-sky-600 text-white",
+  red:
+    "bg-rose-500 hover:bg-rose-600 border-rose-600 text-white",
+  orange:
+    "bg-amber-500 hover:bg-amber-600 border-amber-600 text-white",
+};
+
+// Цветной кант у раскрытого блока — чтобы было видно «откуда вырос»
+const TONE_BORDER: Record<ScriptBlockTone, string> = {
+  green: "border-emerald-300 bg-emerald-50/40",
+  blue: "border-sky-300 bg-sky-50/40",
+  red: "border-rose-300 bg-rose-50/40",
+  orange: "border-amber-300 bg-amber-50/40",
+};
+
+// Постоянно видимые заметки — не сворачиваются
+const CALLOUT_STYLE: Record<
+  CalloutTone,
+  {
+    bg: string;
+    border: string;
+    text: string;
+    iconColor: string;
+    Icon: typeof Info;
+  }
+> = {
+  warn: {
+    bg: "bg-rose-50",
+    border: "border-rose-300",
+    text: "text-rose-900",
+    iconColor: "text-rose-600",
+    Icon: AlertTriangle,
+  },
+  info: {
+    bg: "bg-sky-50",
+    border: "border-sky-300",
+    text: "text-sky-900",
+    iconColor: "text-sky-600",
+    Icon: Info,
+  },
+  ok: {
+    bg: "bg-emerald-50",
+    border: "border-emerald-300",
+    text: "text-emerald-900",
+    iconColor: "text-emerald-600",
+    Icon: CheckCircle2,
+  },
+};
+
+// Простой рендер **жирного** внутри строки
+function renderRichInline(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith("**") && p.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold">
+          {p.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={i}>{p}</React.Fragment>;
+  });
+}
+
+// Рендер блока контента: \n\n → абзацы, \n → перенос строки
+function renderContent(text: string): React.ReactNode {
+  const paragraphs = text.split(/\n\n+/);
+  return paragraphs.map((para, i) => (
+    <p key={i} className="whitespace-pre-line text-sm leading-relaxed text-navy/85">
+      {renderRichInline(para)}
+    </p>
+  ));
+}
 
 export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
   const script = serviceScripts[serviceId];
 
-  // Аккордеон: по умолчанию открыты первые 2 секции
-  const [openSections, setOpenSections] = React.useState<Set<string>>(
-    () => new Set(script?.sections.slice(0, 2).map((s) => s.id) ?? [])
-  );
+  // Какие разворачивающиеся блоки открыты (индекс в массиве blocks)
+  const [openIdx, setOpenIdx] = React.useState<Set<number>>(new Set());
 
   if (!script) {
     return (
@@ -43,32 +114,42 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
     );
   }
 
-  const toggle = (id: string) => {
-    setOpenSections((prev) => {
+  const expandableCount = script.blocks.filter(
+    (b) => b.kind === "expandable"
+  ).length;
+
+  const toggle = (i: number) => {
+    setOpenIdx((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
       return next;
     });
   };
 
   const expandAll = () =>
-    setOpenSections(new Set(script.sections.map((s) => s.id)));
-  const collapseAll = () => setOpenSections(new Set());
+    setOpenIdx(
+      new Set(
+        script.blocks
+          .map((b, i) => (b.kind === "expandable" ? i : -1))
+          .filter((i) => i >= 0)
+      )
+    );
+  const collapseAll = () => setOpenIdx(new Set());
 
   return (
-    <div className="space-y-6">
-      {/* Шапка скрипта */}
-      <Card className="border-copper/25 bg-gradient-to-r from-copper/[0.06] via-white to-emerald-50/40 p-6 shadow-soft">
+    <div className="space-y-5">
+      {/* Метаданные скрипта */}
+      <Card className="border-copper/25 bg-gradient-to-r from-copper/[0.06] via-white to-emerald-50/40 p-5 shadow-soft">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-copper">
               <Sparkles size={12} /> Скрипт оператора
             </p>
-            <h2 className="mt-1 text-xl font-semibold text-navy">
+            <h2 className="mt-1 text-lg font-semibold text-navy">
               {script.serviceName}
             </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-navy/70">
+            <p className="mt-1 text-xs leading-relaxed text-navy/65">
               {script.context}
             </p>
           </div>
@@ -85,7 +166,7 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
             </a>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-navy/55">
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-navy/55">
           <span className="inline-flex items-center gap-1">
             <Calendar size={11} /> Обновлён {script.updatedAt}
           </span>
@@ -95,7 +176,7 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
         </div>
       </Card>
 
-      {/* Кнопки управления аккордеоном */}
+      {/* Управление аккордеоном — над портянкой */}
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <button
           onClick={expandAll}
@@ -110,21 +191,30 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
           Свернуть все
         </button>
         <span className="ml-auto text-navy/55">
-          Всего секций: <span className="font-semibold text-navy">{script.sections.length}</span> ·
-          Обязательных: <span className="font-semibold text-navy">{script.sections.filter((s) => s.required).length}</span>
+          Раскрывающихся блоков:{" "}
+          <span className="font-semibold text-navy">{expandableCount}</span>
         </span>
       </div>
 
-      {/* Секции скрипта */}
+      {/* Портянка скрипта — все блоки одним потоком */}
       <div className="space-y-3">
-        {script.sections.map((section) => (
-          <SectionAccordion
-            key={section.id}
-            section={section}
-            isOpen={openSections.has(section.id)}
-            onToggle={() => toggle(section.id)}
-          />
-        ))}
+        {script.blocks.map((block, i) => {
+          const key = `${block.kind}-${i}`;
+          if (block.kind === "header") {
+            return <HeaderBlock key={key} block={block} />;
+          }
+          if (block.kind === "callout") {
+            return <CalloutBlock key={key} block={block} />;
+          }
+          return (
+            <ExpandableBlock
+              key={key}
+              block={block}
+              isOpen={openIdx.has(i)}
+              onToggle={() => toggle(i)}
+            />
+          );
+        })}
       </div>
 
       {/* Подвал */}
@@ -149,119 +239,120 @@ export function ServiceScriptTab({ serviceId }: { serviceId: string }) {
   );
 }
 
-function SectionAccordion({
-  section,
+// ── Шапка скрипта (имитирует «Приветствие по линии 8161» из старой версии) ──
+
+function HeaderBlock({
+  block,
+}: {
+  block: Extract<ScriptBlock, { kind: "header" }>;
+}) {
+  return (
+    <div className="relative rounded-card border border-navy/20 bg-stone-50/60 pt-6 pb-6 px-6">
+      {/* Бейдж с номером линии — наплыв на верхнюю границу, как «таб» */}
+      {block.lineNumber && (
+        <span className="absolute -top-3 left-6 rounded-md border border-navy/20 bg-stone-100 px-3 py-1 text-xs font-medium text-navy/75">
+          Приветствие по линии {block.lineNumber}
+        </span>
+      )}
+      <div className="space-y-3 text-center">
+        <p className="text-base font-semibold text-navy">{block.greeting}</p>
+        <p className="text-base text-navy">{renderRichInline(block.intro)}</p>
+        {block.hint && (
+          <p className="text-sm text-rose-700">
+            <span className="font-bold">!</span> {renderRichInline(block.hint)}
+          </p>
+        )}
+      </div>
+      {block.topics && block.topics.length > 0 && (
+        <div className="mx-auto mt-5 max-w-3xl overflow-hidden rounded-lg border border-navy/20 bg-white">
+          <table className="w-full text-sm">
+            <tbody>
+              {block.topics.map((row, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-navy/10 last:border-0"
+                >
+                  <td className="w-1/2 border-r border-navy/10 px-4 py-2 text-navy/80">
+                    — {row.left}
+                  </td>
+                  <td className="w-1/2 px-4 py-2 text-navy/80">— {row.right}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Постоянно видимая заметка (не сворачивается) ──
+
+function CalloutBlock({
+  block,
+}: {
+  block: Extract<ScriptBlock, { kind: "callout" }>;
+}) {
+  const style = CALLOUT_STYLE[block.tone];
+  const Icon = style.Icon;
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-card border-2 px-5 py-4 text-sm leading-relaxed",
+        style.bg,
+        style.border,
+        style.text
+      )}
+    >
+      <Icon size={18} className={cn("mt-0.5 shrink-0", style.iconColor)} />
+      <p className="whitespace-pre-line">{renderRichInline(block.text)}</p>
+    </div>
+  );
+}
+
+// ── Цветная разворачивающаяся кнопка ──
+
+function ExpandableBlock({
+  block,
   isOpen,
   onToggle,
 }: {
-  section: ScriptSection;
+  block: Extract<ScriptBlock, { kind: "expandable" }>;
   isOpen: boolean;
   onToggle: () => void;
 }) {
+  const buttonStyle = TONE_BUTTON[block.tone];
+  const borderStyle = TONE_BORDER[block.tone];
   return (
-    <Card className="overflow-hidden">
+    <div className="overflow-hidden rounded-card">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-navy-50/40"
+        className={cn(
+          "flex w-full items-center justify-between gap-3 border-b-2 px-5 py-3.5 text-left font-semibold transition-colors",
+          buttonStyle,
+          isOpen ? "rounded-t-card" : "rounded-card"
+        )}
         aria-expanded={isOpen}
       >
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold text-navy">{section.title}</h3>
-            {section.required && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-rose-700">
-                Обязательно
-              </span>
-            )}
-            {section.durationHint && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-navy/15 bg-navy-50 px-2 py-0.5 text-[10px] font-medium text-navy/65">
-                {section.durationHint}
-              </span>
-            )}
-          </div>
-          {section.description && (
-            <p className="mt-1 text-xs text-navy/55">{section.description}</p>
-          )}
-        </div>
+        <span className="text-sm sm:text-base">{block.title}</span>
         <ChevronDown
           size={18}
           className={cn(
-            "shrink-0 text-navy/55 transition-transform",
+            "shrink-0 transition-transform",
             isOpen && "rotate-180"
           )}
         />
       </button>
       {isOpen && (
-        <div className="space-y-2.5 border-t border-navy/[0.06] bg-navy-50/30 p-5">
-          {section.steps.map((step, i) => (
-            <StepView key={i} step={step} />
-          ))}
+        <div
+          className={cn(
+            "space-y-3 rounded-b-card border-x-2 border-b-2 px-5 py-4",
+            borderStyle
+          )}
+        >
+          {renderContent(block.content)}
         </div>
       )}
-    </Card>
-  );
-}
-
-function StepView({ step }: { step: ScriptStep }) {
-  if (step.kind === "note") {
-    const style = TONE_STYLE[step.tone];
-    const Icon = style.Icon;
-    return (
-      <div
-        className={cn(
-          "flex items-start gap-2 rounded-card border px-3 py-2 text-xs leading-relaxed",
-          style.bg,
-          style.border,
-          style.text
-        )}
-      >
-        <Icon size={14} className={cn("mt-0.5 shrink-0", style.iconColor)} />
-        <span>{step.text}</span>
-      </div>
-    );
-  }
-
-  if (step.kind === "client") {
-    return (
-      <div className="flex justify-end gap-2">
-        <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-copper/90 px-4 py-2.5 text-sm text-white shadow-soft">
-          {step.text}
-        </div>
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-copper/15 text-copper">
-          <User2 size={14} />
-        </span>
-      </div>
-    );
-  }
-
-  // operator
-  return (
-    <div className="flex gap-2">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy text-white">
-        <Headset size={13} />
-      </span>
-      <div className="max-w-[85%] space-y-1.5">
-        <div className="rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-sm text-navy shadow-soft">
-          {step.text}
-        </div>
-        {step.alternatives && step.alternatives.length > 0 && (
-          <details className="text-xs">
-            <summary className="cursor-pointer text-navy/55 hover:text-navy">
-              + {step.alternatives.length} альтернативн{step.alternatives.length === 1 ? "ая формулировка" : "ых формулировок"}
-            </summary>
-            <ul className="mt-2 space-y-1.5">
-              {step.alternatives.map((alt, i) => (
-                <li
-                  key={i}
-                  className="rounded-2xl rounded-bl-sm border border-dashed border-navy/15 bg-white/50 px-4 py-2 text-xs text-navy/75"
-                >
-                  {alt}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </div>
     </div>
   );
 }
