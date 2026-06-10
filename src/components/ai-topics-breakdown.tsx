@@ -90,13 +90,39 @@ export function AiTopicsBreakdown<T>({
   );
 }
 
+// Сколько строк показываем по умолчанию. Остальное — под кнопкой
+// «Показать ещё». 10 — компромисс: видны лидеры + длинный хвост
+// не превращает блок в простыню (при 30+ категориях).
+const TOPIC_PAGE_SIZE = 10;
+
 function TopicTable({ title, rows }: { title: string; rows: TopicCount[] }) {
+  const [expanded, setExpanded] = React.useState(false);
   const max = rows[0]?.count ?? 0;
+  const total = rows.length;
+  const hidden = Math.max(0, total - TOPIC_PAGE_SIZE);
+  const visible = expanded ? rows : rows.slice(0, TOPIC_PAGE_SIZE);
+
+  // Сумма скрытых для строки «Остальные» — даёт быстрый ответ
+  // на «сколько весят все мелкие категории вместе»
+  const tailCount = rows
+    .slice(TOPIC_PAGE_SIZE)
+    .reduce((s, r) => s + r.count, 0);
+  const tailPct = rows
+    .slice(TOPIC_PAGE_SIZE)
+    .reduce((s, r) => s + r.pct, 0);
+
   return (
     <div>
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-navy/45">
-        {title}
-      </p>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-navy/45">
+          {title}
+        </p>
+        <p className="text-[10px] text-navy/45 tabular-nums">
+          {expanded || hidden === 0
+            ? `всего ${total}`
+            : `топ ${TOPIC_PAGE_SIZE} из ${total}`}
+        </p>
+      </div>
       <div className="overflow-hidden rounded-card border border-navy/[0.06]">
         <table className="w-full text-sm">
           <thead>
@@ -111,7 +137,7 @@ function TopicTable({ title, rows }: { title: string; rows: TopicCount[] }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
+            {visible.map((r, i) => (
               <tr
                 key={i}
                 className="border-b border-navy/[0.04] last:border-0 hover:bg-navy-50/30"
@@ -142,9 +168,32 @@ function TopicTable({ title, rows }: { title: string; rows: TopicCount[] }) {
                 </td>
               </tr>
             ))}
+            {!expanded && hidden > 0 && (
+              <tr className="border-b border-navy/[0.04] bg-navy-50/30 last:border-0">
+                <td className="px-3 py-2 italic text-navy/55">
+                  + ещё {hidden} {hidden === 1 ? "тема" : "тем"} (свёрнуто)
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-navy/55">
+                  {tailCount.toLocaleString("ru-RU")}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-navy/55">
+                  {tailPct.toFixed(2)}%
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+      {hidden > 0 && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 inline-flex items-center gap-1 rounded-lg border border-navy/15 bg-white px-3 py-1.5 text-xs font-medium text-navy/75 transition-colors hover:border-copper hover:text-copper"
+        >
+          {expanded
+            ? `Свернуть до топ-${TOPIC_PAGE_SIZE}`
+            : `Показать ещё ${hidden}`}
+        </button>
+      )}
     </div>
   );
 }
