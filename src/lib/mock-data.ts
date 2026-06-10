@@ -3052,6 +3052,7 @@ export const OUTBOUND_STATUS_LABEL: Record<OutboundCallStatus, string> = {
 export type OutboundCall = {
   id: string;
   serviceId: string;
+  uid: string;              // UID звонка из телефонии — для deep-link
   date: string;
   time: string;
   operator: { id: string; name: string };
@@ -3064,7 +3065,8 @@ export type OutboundCall = {
   // ИИ-карточка результата звонка — заполнена для всех answered/reached/target.
   // Для not_reached тоже есть, но scriptMatch = 0 и summary поясняет «без диалога».
   ai?: {
-    clientName?: string;
+    companyName?: string;   // название компании — основной субъект исходящих B2B
+    clientName?: string;    // ФИО собеседника, если ИИ извлёк
     summary: string;
     category: string;       // итог звонка по бизнес-классификации
     subcategory: string;    // конкретный исход / возражение
@@ -3075,8 +3077,9 @@ export type OutboundCall = {
 
 export const outboundCalls: OutboundCall[] = [
   // ── СЕГОДНЯ (04.06.2026) — 8 звонков ──
-  { id: "oc-101", serviceId: "outbound-q2", date: "04.06.2026", time: "09:15:08", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (916) 311-44-58", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 187, topic: "Согласие на встречу",
+  { id: "oc-101", serviceId: "outbound-q2", uid: "1780553709.221383741", date: "04.06.2026", time: "09:15:08", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (916) 311-44-58", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 187, topic: "Согласие на встречу",
     ai: {
+      companyName: "ООО «Премиум-Сеть»",
       clientName: "Орлова Светлана",
       summary: "Клиент согласился на встречу с менеджером для презентации продукта. Время согласовано, приглашение в календарь отправлено сразу после звонка.",
       category: "Целевое действие",
@@ -3084,16 +3087,18 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 95.00,
     }
   },
-  { id: "oc-102", serviceId: "outbound-q2", date: "04.06.2026", time: "09:48:22", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (905) 822-19-30", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 8,
+  { id: "oc-102", serviceId: "outbound-q2", uid: "1780555704.221397482", date: "04.06.2026", time: "09:48:22", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (905) 822-19-30", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 8,
     ai: {
+      companyName: "ООО «Альфа-Логистик»",
       summary: "Абонент не взял трубку — после 5 гудков сорвался автодозвон.",
       category: "Без диалога",
       subcategory: "Нет ответа",
       scriptMatch: 0.00,
     }
   },
-  { id: "oc-103", serviceId: "outbound-q2", date: "04.06.2026", time: "10:22:14", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (964) 200-33-77", segment: "Возвраты к покупке", attempt: 2, status: "target",      durationSec: 165, topic: "Заказ оформлен",
+  { id: "oc-103", serviceId: "outbound-q2", uid: "1780557737.221411123", date: "04.06.2026", time: "10:22:14", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (964) 200-33-77", segment: "Возвраты к покупке", attempt: 2, status: "target",      durationSec: 165, topic: "Заказ оформлен",
     ai: {
+      companyName: "АО «Старт-Маркет»",
       clientName: "Васильева Ольга Николаевна",
       summary: "Клиент оформил заказ по итогам разговора. Контактные данные подтверждены, оператор передал заказ в обработку.",
       category: "Целевое действие",
@@ -3101,8 +3106,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 93.00,
     }
   },
-  { id: "oc-104", serviceId: "outbound-q2", date: "04.06.2026", time: "11:05:42", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (903) 412-66-21", segment: "Тёплая база",        attempt: 1, status: "reached",     durationSec: 92,  topic: "Возражение «дорого»",
+  { id: "oc-104", serviceId: "outbound-q2", uid: "1780560346.221424864", date: "04.06.2026", time: "11:05:42", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (903) 412-66-21", segment: "Тёплая база",        attempt: 1, status: "reached",     durationSec: 92,  topic: "Возражение «дорого»",
     ai: {
+      companyName: "ООО «Эталон-Юг»",
       clientName: "Новиков Андрей",
       summary: "Клиент сослался на стоимость. Оператор корректно отработал возражение, перевёл разговор на бесплатный аудит, но решение клиент принять не готов. Договорились о повторном звонке через 2 недели.",
       category: "Дозвон без целевого",
@@ -3110,8 +3116,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 80.00,
     }
   },
-  { id: "oc-105", serviceId: "outbound-q2", date: "04.06.2026", time: "12:18:33", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (915) 800-11-44", segment: "NPS-опрос",          attempt: 1, status: "target",      durationSec: 134, topic: "Оценка 9/10",
+  { id: "oc-105", serviceId: "outbound-q2", uid: "1780564718.221438505", date: "04.06.2026", time: "12:18:33", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (915) 800-11-44", segment: "NPS-опрос",          attempt: 1, status: "target",      durationSec: 134, topic: "Оценка 9/10",
     ai: {
+      companyName: "ООО «Эталон-Юг»",
       clientName: "Захарова Екатерина",
       summary: "Клиент дал оценку NPS 9/10. Положительный отклик, оператор зафиксировал комментарий: «работой довольны, ничего менять не нужно».",
       category: "Целевое действие",
@@ -3119,16 +3126,18 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 95.00,
     }
   },
-  { id: "oc-106", serviceId: "outbound-q2", date: "04.06.2026", time: "14:42:11", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (812) 446-22-15", segment: "Холодная база",      attempt: 3, status: "not_reached", durationSec: 5,
+  { id: "oc-106", serviceId: "outbound-q2", uid: "1780573337.221452246", date: "04.06.2026", time: "14:42:11", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (812) 446-22-15", segment: "Холодная база",      attempt: 3, status: "not_reached", durationSec: 5,
     ai: {
+      companyName: "АО «РегионТорг»",
       summary: "Сработал автоответчик. Сообщение не оставляли — приоритет повторного дозвона.",
       category: "Без диалога",
       subcategory: "3-я попытка — финальный недозвон",
       scriptMatch: 0.00,
     }
   },
-  { id: "oc-107", serviceId: "outbound-q2", date: "04.06.2026", time: "15:30:55", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (985) 622-33-88", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 198, topic: "Заказ оформлен",
+  { id: "oc-107", serviceId: "outbound-q2", uid: "1780576262.221465987", date: "04.06.2026", time: "15:30:55", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (985) 622-33-88", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 198, topic: "Заказ оформлен",
     ai: {
+      companyName: "ООО «Дом и Сад»",
       clientName: "Лебедева Анна",
       summary: "Клиент оформил заказ по итогам разговора. Контактные данные подтверждены, оператор передал заказ в обработку.",
       category: "Целевое действие",
@@ -3136,8 +3145,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 97.00,
     }
   },
-  { id: "oc-108", serviceId: "outbound-q2", date: "04.06.2026", time: "17:08:14", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (495) 521-78-90", segment: "Тёплая база",        attempt: 2, status: "reached",     durationSec: 115, topic: "Возражение «уже с конкурентом»",
+  { id: "oc-108", serviceId: "outbound-q2", uid: "1780582102.221479628", date: "04.06.2026", time: "17:08:14", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (495) 521-78-90", segment: "Тёплая база",        attempt: 2, status: "reached",     durationSec: 115, topic: "Возражение «уже с конкурентом»",
     ai: {
+      companyName: "Сеть «Золотой Берег»",
       summary: "Клиент сообщил, что уже работает с другим подрядчиком. Оператор корректно предложил резервный сценарий на пиковые периоды — клиент готов рассмотреть на будущий квартал.",
       category: "Дозвон без целевого",
       subcategory: "Работают с конкурентом",
@@ -3146,8 +3156,9 @@ export const outboundCalls: OutboundCall[] = [
   },
 
   // ── ВЧЕРА (03.06.2026) — 6 звонков ──
-  { id: "oc-110", serviceId: "outbound-q2", date: "03.06.2026", time: "09:45:18", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (921) 555-12-90", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 178, topic: "Согласие",
+  { id: "oc-110", serviceId: "outbound-q2", uid: "1780469128.221507010", date: "03.06.2026", time: "09:45:18", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (921) 555-12-90", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 178, topic: "Согласие",
     ai: {
+      companyName: "ООО «ТехноМир»",
       clientName: "Соколов Артём",
       summary: "Клиент согласился на встречу с менеджером для презентации продукта. Время согласовано, приглашение в календарь отправлено сразу после звонка.",
       category: "Целевое действие",
@@ -3155,8 +3166,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 96.00,
     }
   },
-  { id: "oc-111", serviceId: "outbound-q2", date: "03.06.2026", time: "11:22:31", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (985) 622-33-88", segment: "Холодная база",      attempt: 2, status: "reached",     durationSec: 88, topic: "Не сейчас",
+  { id: "oc-111", serviceId: "outbound-q2", uid: "1780474962.221520751", date: "03.06.2026", time: "11:22:31", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (985) 622-33-88", segment: "Холодная база",      attempt: 2, status: "reached",     durationSec: 88, topic: "Не сейчас",
     ai: {
+      companyName: "АО «Балтика-Трейд»",
       clientName: "Кузнецова Мария Ивановна",
       summary: "Клиент сказал «не сейчас» — в текущем квартале нет потребности. Оператор зафиксировал отказ, договорился об актуализации контакта через 3 месяца.",
       category: "Дозвон без целевого",
@@ -3164,8 +3176,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 85.00,
     }
   },
-  { id: "oc-112", serviceId: "outbound-q2", date: "03.06.2026", time: "13:55:09", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (903) 555-44-33", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 245, topic: "Заказ оформлен",
+  { id: "oc-112", serviceId: "outbound-q2", uid: "1780484121.221534492", date: "03.06.2026", time: "13:55:09", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (903) 555-44-33", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 245, topic: "Заказ оформлен",
     ai: {
+      companyName: "ООО «Дом и Сад»",
       clientName: "Петров Дмитрий Сергеевич",
       summary: "Клиент оформил заказ по итогам разговора. Контактные данные подтверждены, оператор передал заказ в обработку.",
       category: "Целевое действие",
@@ -3173,16 +3186,18 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 93.00,
     }
   },
-  { id: "oc-113", serviceId: "outbound-q2", date: "03.06.2026", time: "15:42:55", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (909) 100-88-77", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 6,
+  { id: "oc-113", serviceId: "outbound-q2", uid: "1780490588.221548133", date: "03.06.2026", time: "15:42:55", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (909) 100-88-77", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 6,
     ai: {
+      companyName: "АО «РегионТорг»",
       summary: "Номер занят. Звонок переведён в очередь повторных попыток.",
       category: "Без диалога",
       subcategory: "Нет ответа",
       scriptMatch: 0.00,
     }
   },
-  { id: "oc-114", serviceId: "outbound-q2", date: "03.06.2026", time: "16:18:42", operator: { id: "O1207", name: "Кузнецов Евгений" }, contactNumber: "+7 (812) 220-44-66", segment: "NPS-опрос",          attempt: 2, status: "target",      durationSec: 122, topic: "Оценка 8/10",
+  { id: "oc-114", serviceId: "outbound-q2", uid: "1780492736.221561874", date: "03.06.2026", time: "16:18:42", operator: { id: "O1207", name: "Кузнецов Евгений" }, contactNumber: "+7 (812) 220-44-66", segment: "NPS-опрос",          attempt: 2, status: "target",      durationSec: 122, topic: "Оценка 8/10",
     ai: {
+      companyName: "Сеть «Золотой Берег»",
       clientName: "Михайлов Илья",
       summary: "Клиент дал оценку NPS 8/10. Положительный отклик, оператор зафиксировал комментарий: «в целом нормально, есть пара замечаний по доставке».",
       category: "Целевое действие",
@@ -3190,8 +3205,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 92.00,
     }
   },
-  { id: "oc-115", serviceId: "outbound-q2", date: "03.06.2026", time: "17:30:20", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (903) 412-66-21", segment: "Тёплая база",        attempt: 1, status: "reached",     durationSec: 134, topic: "Думает",
+  { id: "oc-115", serviceId: "outbound-q2", uid: "1780497035.221575515", date: "03.06.2026", time: "17:30:20", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (903) 412-66-21", segment: "Тёплая база",        attempt: 1, status: "reached",     durationSec: 134, topic: "Думает",
     ai: {
+      companyName: "ООО «АРТ-Декор»",
       clientName: "Васильева Ольга Николаевна",
       summary: "Клиент попросил время на обдумывание. Оператор зафиксировал согласие на повторный контакт через 5 рабочих дней, отправил материалы на почту.",
       category: "Дозвон без целевого",
@@ -3201,24 +3217,27 @@ export const outboundCalls: OutboundCall[] = [
   },
 
   // ── ЭТА НЕДЕЛЯ (28–31.05.2026) — 5 звонков ──
-  { id: "oc-120", serviceId: "outbound-q2", date: "31.05.2026", time: "10:15:23", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (903) 718-22-44", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 192, topic: "Согласие",
+  { id: "oc-120", serviceId: "outbound-q2", uid: "1780211743.221644020", date: "31.05.2026", time: "10:15:23", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (903) 718-22-44", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 192, topic: "Согласие",
     ai: {
+      companyName: "ООО «Эталон-Юг»",
       summary: "Клиент согласился на встречу с менеджером для презентации продукта. Время согласовано, приглашение в календарь отправлено сразу после звонка.",
       category: "Целевое действие",
       subcategory: "Согласие на встречу",
       scriptMatch: 90.00,
     }
   },
-  { id: "oc-121", serviceId: "outbound-q2", date: "30.05.2026", time: "11:42:08", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (964) 332-11-90", segment: "Холодная база",      attempt: 3, status: "not_reached", durationSec: 9,
+  { id: "oc-121", serviceId: "outbound-q2", uid: "1780130549.221657761", date: "30.05.2026", time: "11:42:08", operator: { id: "O0729", name: "Сидорова Наталья" }, contactNumber: "+7 (964) 332-11-90", segment: "Холодная база",      attempt: 3, status: "not_reached", durationSec: 9,
     ai: {
+      companyName: "ООО «Эверест»",
       summary: "Сработал автоответчик. Сообщение не оставляли — приоритет повторного дозвона.",
       category: "Без диалога",
       subcategory: "3-я попытка — финальный недозвон",
       scriptMatch: 0.00,
     }
   },
-  { id: "oc-122", serviceId: "outbound-q2", date: "29.05.2026", time: "14:30:12", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (495) 880-22-11", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 215, topic: "Заказ",
+  { id: "oc-122", serviceId: "outbound-q2", uid: "1780054234.221671402", date: "29.05.2026", time: "14:30:12", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (495) 880-22-11", segment: "Возвраты к покупке", attempt: 1, status: "target",      durationSec: 215, topic: "Заказ",
     ai: {
+      companyName: "ООО «Дом и Сад»",
       clientName: "Соколов Артём",
       summary: "Клиент оформил заказ по итогам разговора. Контактные данные подтверждены, оператор передал заказ в обработку.",
       category: "Целевое действие",
@@ -3226,8 +3245,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 94.00,
     }
   },
-  { id: "oc-123", serviceId: "outbound-q2", date: "29.05.2026", time: "16:11:33", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (916) 545-66-77", segment: "NPS-опрос",          attempt: 1, status: "target",      durationSec: 105, topic: "Оценка 10/10",
+  { id: "oc-123", serviceId: "outbound-q2", uid: "1780060316.221685143", date: "29.05.2026", time: "16:11:33", operator: { id: "O0608", name: "Петров Борис" },     contactNumber: "+7 (916) 545-66-77", segment: "NPS-опрос",          attempt: 1, status: "target",      durationSec: 105, topic: "Оценка 10/10",
     ai: {
+      companyName: "ООО «АРТ-Декор»",
       clientName: "Кузнецова Мария Ивановна",
       summary: "Клиент дал оценку NPS 10/10. Положительный отклик, оператор зафиксировал комментарий: «работой довольны, ничего менять не нужно».",
       category: "Целевое действие",
@@ -3235,8 +3255,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 95.00,
     }
   },
-  { id: "oc-124", serviceId: "outbound-q2", date: "28.05.2026", time: "12:08:42", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (985) 100-99-88", segment: "Тёплая база",        attempt: 2, status: "reached",     durationSec: 142, topic: "Возражение «дорого»",
+  { id: "oc-124", serviceId: "outbound-q2", uid: "1779959346.221698884", date: "28.05.2026", time: "12:08:42", operator: { id: "O0922", name: "Залевская Мария" }, contactNumber: "+7 (985) 100-99-88", segment: "Тёплая база",        attempt: 2, status: "reached",     durationSec: 142, topic: "Возражение «дорого»",
     ai: {
+      companyName: "Сеть «Золотой Берег»",
       clientName: "Петров Дмитрий Сергеевич",
       summary: "Клиент сослался на стоимость. Оператор корректно отработал возражение, перевёл разговор на бесплатный аудит, но решение клиент принять не готов. Договорились о повторном звонке через 2 недели.",
       category: "Дозвон без целевого",
@@ -3246,8 +3267,9 @@ export const outboundCalls: OutboundCall[] = [
   },
 
   // ── ЭТОТ МЕСЯЦ (08–22.05.2026) — 4 звонка ──
-  { id: "oc-130", serviceId: "outbound-q2", date: "22.05.2026", time: "10:18:20", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (905) 100-44-22", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 158, topic: "Согласие",
+  { id: "oc-130", serviceId: "outbound-q2", uid: "1779434330.221781030", date: "22.05.2026", time: "10:18:20", operator: { id: "O0451", name: "Иванова Анна" },     contactNumber: "+7 (905) 100-44-22", segment: "Тёплая база",        attempt: 1, status: "target",      durationSec: 158, topic: "Согласие",
     ai: {
+      companyName: "ИП Голубев",
       clientName: "Морозов Виктор",
       summary: "Клиент согласился на встречу с менеджером для презентации продукта. Время согласовано, приглашение в календарь отправлено сразу после звонка.",
       category: "Целевое действие",
@@ -3255,8 +3277,9 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 92.00,
     }
   },
-  { id: "oc-131", serviceId: "outbound-q2", date: "18.05.2026", time: "12:45:08", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (921) 622-99-88", segment: "Холодная база",      attempt: 1, status: "reached",     durationSec: 88, topic: "Не интересно",
+  { id: "oc-131", serviceId: "outbound-q2", uid: "1779097539.221794771", date: "18.05.2026", time: "12:45:08", operator: { id: "O0834", name: "Соколов Виктор" },   contactNumber: "+7 (921) 622-99-88", segment: "Холодная база",      attempt: 1, status: "reached",     durationSec: 88, topic: "Не интересно",
     ai: {
+      companyName: "ООО «Контакт-Сервис»",
       clientName: "Лебедева Анна",
       summary: "Клиент сказал «не сейчас» — в текущем квартале нет потребности. Оператор зафиксировал отказ, договорился об актуализации контакта через 3 месяца.",
       category: "Дозвон без целевого",
@@ -3264,16 +3287,18 @@ export const outboundCalls: OutboundCall[] = [
       scriptMatch: 81.00,
     }
   },
-  { id: "oc-132", serviceId: "outbound-q2", date: "12.05.2026", time: "15:32:42", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (495) 770-33-11", segment: "Возвраты к покупке", attempt: 2, status: "target",      durationSec: 218, topic: "Заказ",
+  { id: "oc-132", serviceId: "outbound-q2", uid: "1778589194.221808412", date: "12.05.2026", time: "15:32:42", operator: { id: "O1034", name: "Белов Денис" },     contactNumber: "+7 (495) 770-33-11", segment: "Возвраты к покупке", attempt: 2, status: "target",      durationSec: 218, topic: "Заказ",
     ai: {
+      companyName: "ООО «Дом и Сад»",
       summary: "Клиент оформил заказ по итогам разговора. Контактные данные подтверждены, оператор передал заказ в обработку.",
       category: "Целевое действие",
       subcategory: "Оформление заказа",
       scriptMatch: 95.00,
     }
   },
-  { id: "oc-133", serviceId: "outbound-q2", date: "08.05.2026", time: "16:25:55", operator: { id: "O1207", name: "Кузнецов Евгений" }, contactNumber: "+7 (903) 233-44-55", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 7,
+  { id: "oc-133", serviceId: "outbound-q2", uid: "1778246788.221822153", date: "08.05.2026", time: "16:25:55", operator: { id: "O1207", name: "Кузнецов Евгений" }, contactNumber: "+7 (903) 233-44-55", segment: "Холодная база",      attempt: 1, status: "not_reached", durationSec: 7,
     ai: {
+      companyName: "ООО «Северный Альянс»",
       summary: "Сработал автоответчик. Сообщение не оставляли — приоритет повторного дозвона.",
       category: "Без диалога",
       subcategory: "Нет ответа",

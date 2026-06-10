@@ -19,6 +19,7 @@ import {
   ScriptMatchBar,
   AudioPlayerStub,
   normalizePhone,
+  UidRow,
 } from "@/components/call-detail-modal";
 
 const STATUS_COLOR: Record<OutboundCallStatus, string> = {
@@ -104,6 +105,7 @@ export function OutboundCallDetailModal({
                   Информация о звонке
                 </p>
                 <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
+                  <UidRow uid={call.uid} />
                   <Row label="Контакт" value={call.contactNumber} mono />
                   <Row
                     label="Оператор"
@@ -149,6 +151,11 @@ export function OutboundCallDetailModal({
                   </p>
                   <div className="rounded-card border border-copper/30 bg-copper/[0.04] p-4">
                     <div className="space-y-3.5">
+                      <AiField
+                        label="Компания"
+                        value={call.ai.companyName?.trim() || "—"}
+                        empty={!call.ai.companyName?.trim()}
+                      />
                       <AiField
                         label="ФИО клиента"
                         value={call.ai.clientName?.trim() || "—"}

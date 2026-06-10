@@ -379,7 +379,7 @@ export function normalizePhone(raw: string): string {
 // Строка с UID + кнопкой «Скопировать ссылку на вызов».
 // Ссылка имеет формат <origin>?call=<uid> — можно отправить коллеге,
 // он откроет портал и попадёт прямо на этот вызов (deep-link).
-function UidRow({ uid }: { uid: string }) {
+export function UidRow({ uid }: { uid: string }) {
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
