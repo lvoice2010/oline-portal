@@ -366,8 +366,8 @@ function AiField({
 }
 
 // Полоса прогресса «Соответствие диалога скрипту».
-// Цвет — по порогу: 90+ зелёный, 75–89 янтарный, < 75 розовый.
-// Label и % лежат поверх полосы (как на скриншоте админки).
+// Цвет заливки — по порогу: 90+ зелёный, 75–89 янтарный, < 75 розовый.
+// Фон всегда тёмный — текст белый поверх читается одинаково при любом %.
 function ScriptMatchBar({ value }: { value: number }) {
   const clamped = Math.max(0, Math.min(100, value));
   const tone =
@@ -375,20 +375,20 @@ function ScriptMatchBar({ value }: { value: number }) {
       ? "bg-emerald-500"
       : clamped >= 75
       ? "bg-amber-500"
-      : "bg-rose-500";
+      : clamped > 0
+      ? "bg-rose-500"
+      : "bg-transparent";
   return (
-    <div className="relative h-9 w-full overflow-hidden rounded-lg border border-navy/15 bg-navy-50/60">
+    <div className="relative h-10 w-full overflow-hidden rounded-lg bg-navy">
       {/* Цветная заливка по проценту */}
       <div
         className={cn("absolute inset-y-0 left-0 transition-[width]", tone)}
         style={{ width: `${clamped}%` }}
       />
-      {/* Текст поверх — лейбл слева, процент справа */}
-      <div className="relative flex h-full items-center justify-between px-3 text-[12px] font-semibold">
-        <span className={cn(clamped >= 25 ? "text-white" : "text-navy/85")}>
-          Соответствие диалога скрипту
-        </span>
-        <span className="text-white tabular-nums">{Math.round(clamped)}%</span>
+      {/* Лейбл слева, процент справа — оба поверх полосы */}
+      <div className="relative flex h-full items-center justify-between px-3.5 text-[12px] font-semibold text-white">
+        <span>Соответствие диалога скрипту</span>
+        <span className="tabular-nums">{Math.round(clamped)}%</span>
       </div>
     </div>
   );
