@@ -19,6 +19,7 @@ import {
   Gauge,
   Download,
   FolderArchive,
+  ScrollText,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,11 @@ import { QuarterlyReportTab } from "@/components/quarterly-report-tab";
 import { OutboundReportTab } from "@/components/outbound-report-tab";
 import { OutboundAnalyticsTab } from "@/components/outbound-analytics-tab";
 import { OutboundCallsTab } from "@/components/outbound-calls-tab";
+import { ServiceScriptTab } from "@/components/service-script-tab";
 
 const TAB_REPORTS = { id: "reports", label: "Отчёты", icon: BarChart3 } as const;
 const TAB_ANALYTICS = { id: "analytics", label: "Аналитика", icon: LineChart } as const;
+const TAB_SCRIPT = { id: "script", label: "Скрипт", icon: ScrollText } as const;
 const TAB_CALLS = { id: "calls", label: "Вызовы", icon: PhoneCall } as const;
 const TAB_DIALOGS = { id: "dialogs", label: "Диалоги", icon: PhoneCall } as const;
 const TAB_RECOMMENDATIONS = {
@@ -58,16 +61,19 @@ function getTabsForService(serviceId: string) {
   if (serviceId === "quarter-report") {
     return [TAB_RECOMMENDATIONS];
   }
-  // Нейроассистент — диалоги вместо звонков
+  // Нейроассистент — диалоги вместо звонков и без вкладки «Скрипт»
+  // (ассистент работает по промптам, а не по скрипту оператора)
   if (serviceId === "chatbot") {
     return [TAB_REPORTS, TAB_ANALYTICS, TAB_DIALOGS];
   }
-  return [TAB_REPORTS, TAB_ANALYTICS, TAB_CALLS];
+  // Голосовые линии: добавляем «Скрипт» между аналитикой и вызовами
+  return [TAB_REPORTS, TAB_ANALYTICS, TAB_SCRIPT, TAB_CALLS];
 }
 
 type TabId =
   | typeof TAB_REPORTS.id
   | typeof TAB_ANALYTICS.id
+  | typeof TAB_SCRIPT.id
   | typeof TAB_CALLS.id
   | typeof TAB_DIALOGS.id
   | typeof TAB_RECOMMENDATIONS.id;
@@ -309,6 +315,7 @@ export default function ServiceDetailPage({
 
       {/* Содержимое таба */}
       {tab === "recommendations" && <QuarterlyReportTab />}
+      {tab === "script" && <ServiceScriptTab serviceId={service.id} />}
       {tab === "calls" &&
         (service.id === "outbound-q2" ? (
           <OutboundCallsTab serviceId={service.id} />
