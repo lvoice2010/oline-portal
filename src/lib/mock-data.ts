@@ -66,7 +66,13 @@ export type ConnectedService = {
   connectedAt?: string; // дата подключения (для active/launching)
   lastContactAt?: string; // для negotiating — последний контакт менеджера
   stageNote?: string; // короткая подпись под stepper про текущий этап
-  manager: { name: string; initials: string; phone: string; telegram: string };
+  manager: {
+    name: string;
+    initials: string;
+    phone: string;
+    telegram: string;
+    email: string;
+  };
   tariff?: string;
   contract?: string; // если задано — в шапке услуги показываем «Договор», а не «Тариф»
   counterparty?: string; // контрагент по договору
@@ -117,7 +123,7 @@ export const connectedServices: ConnectedService[] = [
     ],
     submittedAt: "20.12.2025",
     connectedAt: "12.01.2026",
-    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline" },
+    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline", email: "v.pererva@oline.ru" },
     tariff: "Поминутный, 19,8 ₽/мин (пакет 3 500 мин)",
     contract: "№ 03-07/2026 от 04.05.2026",
     counterparty: "ООО «Перформанс Контакт»",
@@ -164,7 +170,7 @@ export const connectedServices: ConnectedService[] = [
     ],
     submittedAt: "10.02.2026",
     connectedAt: "01.03.2026",
-    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline" },
+    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline", email: "v.pererva@oline.ru" },
     tariff: "FTE-проект, 4 оператора",
     contract: "№ 05-12/2026 от 18.02.2026",
     counterparty: "ООО «Перформанс Контакт»",
@@ -209,7 +215,7 @@ export const connectedServices: ConnectedService[] = [
     ],
     submittedAt: "15.03.2026",
     connectedAt: "02.04.2026",
-    manager: { name: "Юля Головина", initials: "ЮГ", phone: "+7 (495) 120-45-77", telegram: "golovina_oline" },
+    manager: { name: "Юля Головина", initials: "ЮГ", phone: "+7 (495) 120-45-77", telegram: "golovina_oline", email: "y.golovina@oline.ru" },
     tariff: "Проектный, FTE 4",
     volume: "база 12 500 контактов",
     extra: "Прозвон Пн–Пт 09:00–20:00",
@@ -246,7 +252,7 @@ export const connectedServices: ConnectedService[] = [
     ],
     submittedAt: "01.01.2026",
     connectedAt: "10.01.2026",
-    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline" },
+    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline", email: "v.pererva@oline.ru" },
     tariff: "25 000 ₽/квартал",
     volume: "1 отчёт в квартал",
     extra: "Презентация и выгрузка PDF",
@@ -267,7 +273,7 @@ export const connectedServices: ConnectedService[] = [
     submittedAt: "12.05.2026",
     lastContactAt: "17.05.2026",
     stageNote: "Менеджер уточняет чек-листы и объём оценки",
-    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline" },
+    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline", email: "v.pererva@oline.ru" },
   },
   {
     id: "chatbot",
@@ -306,7 +312,7 @@ export const connectedServices: ConnectedService[] = [
     ],
     submittedAt: "20.04.2026",
     connectedAt: "10.05.2026",
-    manager: { name: "Светлана Носенко", initials: "СН", phone: "+7 (495) 120-45-83", telegram: "nosenko_oline" },
+    manager: { name: "Светлана Носенко", initials: "СН", phone: "+7 (495) 120-45-83", telegram: "nosenko_oline", email: "s.nosenko@oline.ru" },
     tariff: "Оплата по факту: текстовый диалог 13 ₽/шт · голосовой звонок 13,5 ₽/мин",
     contract: "№ 04-11/2026 от 15.04.2026",
     counterparty: "ООО «Перформанс Контакт»",

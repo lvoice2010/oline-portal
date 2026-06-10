@@ -11,7 +11,7 @@ import {
   Clock,
   MessageSquare,
   Phone,
-  MessageCircle,
+  Mail,
   X,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -359,14 +359,14 @@ export default function DashboardPage() {
                         <Phone size={14} />
                       </a>
                       <a
-                        href={`https://t.me/${s.manager.telegram}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={`Написать в Telegram ${s.manager.name} (@${s.manager.telegram})`}
+                        href={`mailto:${s.manager.email}?subject=${encodeURIComponent(
+                          `Вопрос по услуге «${s.name}»`
+                        )}`}
+                        title={`Написать на почту ${s.manager.name} (${s.manager.email})`}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-copper/15 text-copper transition-colors hover:bg-copper hover:text-white"
-                        aria-label="Написать менеджеру в Telegram"
+                        aria-label="Написать менеджеру на почту"
                       >
-                        <MessageCircle size={14} />
+                        <Mail size={14} />
                       </a>
                     </div>
                   </div>

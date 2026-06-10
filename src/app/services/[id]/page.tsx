@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Phone,
-  MessageCircle,
+  Mail,
   PhoneCall,
   BarChart3,
   LineChart,
@@ -192,13 +192,13 @@ export default function ServiceDetailPage({
                 <Phone size={14} />
               </a>
               <a
-                href={`https://t.me/${service.manager.telegram}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={`Telegram @${service.manager.telegram}`}
+                href={`mailto:${service.manager.email}?subject=${encodeURIComponent(
+                  `Вопрос по услуге «${service.name}»`
+                )}`}
+                title={`Написать на почту ${service.manager.name} (${service.manager.email})`}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-copper/15 text-copper hover:bg-copper hover:text-white"
               >
-                <MessageCircle size={14} />
+                <Mail size={14} />
               </a>
             </div>
 
@@ -568,10 +568,6 @@ function CallsTab({ serviceId }: { serviceId: string }) {
   const answered = inPeriod.filter((c) => c.status === "answered").length;
   const missed = inPeriod.filter((c) => c.status === "missed").length;
   const callback = inPeriod.filter((c) => c.status === "callback").length;
-  // Минуты — единица оплаты на голосовой линии
-  const totalMinutes = Math.round(
-    inPeriod.reduce((s, c) => s + c.durationSec, 0) / 60
-  );
 
   // Журнал вообще не накоплен (нет вызовов ни в одном периоде по этой услуге)
   if (serviceCalls.length === 0) {
@@ -584,7 +580,7 @@ function CallsTab({ serviceId }: { serviceId: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs text-navy/55">Всего вызовов</p>
           <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
@@ -613,15 +609,6 @@ function CallsTab({ serviceId }: { serviceId: string }) {
             )}
           >
             {callback}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-navy/55">Всего минут</p>
-          <p className="mt-1 text-2xl font-semibold text-navy tabular-nums">
-            {totalMinutes}
-          </p>
-          <p className="text-[10px] text-navy/45">
-            единица оплаты — минута разговора
           </p>
         </Card>
       </div>
