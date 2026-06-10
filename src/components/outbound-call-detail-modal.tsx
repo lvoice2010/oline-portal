@@ -27,15 +27,6 @@ const STATUS_COLOR: Record<OutboundCallStatus, string> = {
   not_reached: "bg-rose-50 text-rose-700 border border-rose-200",
 };
 
-const SEGMENT_COLOR: Record<string, string> = {
-  "Тёплая база":
-    "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  "Холодная база": "bg-sky-50 text-sky-700 border border-sky-200",
-  "Возвраты к покупке":
-    "bg-amber-50 text-amber-700 border border-amber-200",
-  "NPS-опрос": "bg-violet-50 text-violet-700 border border-violet-200",
-};
-
 function fmtDuration(sec: number): string {
   if (sec <= 0) return "—";
   if (sec < 60) return `${sec} сек`;
@@ -63,8 +54,6 @@ export function OutboundCallDetailModal({
   if (!open || !call) return null;
 
   const hasRecording = call.durationSec >= 20; // короткие гудки запись не делают
-  const segmentColor =
-    SEGMENT_COLOR[call.segment] ?? "bg-navy-50 text-navy/70 border border-navy/15";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -87,14 +76,6 @@ export function OutboundCallDetailModal({
                 )}
               >
                 {OUTBOUND_STATUS_LABEL[call.status]}
-              </span>
-              <span
-                className={cn(
-                  "rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                  segmentColor
-                )}
-              >
-                {call.segment}
               </span>
               <span className="rounded-full border border-navy/15 bg-navy-50 px-2.5 py-0.5 text-[11px] font-medium text-navy/70">
                 Попытка {call.attempt}/3
@@ -133,7 +114,6 @@ export function OutboundCallDetailModal({
                       </span>
                     }
                   />
-                  <Row label="Сегмент базы" value={call.segment} />
                   <Row label="Попытка" value={`${call.attempt} из 3`} />
                   <Row
                     label="Длительность"
@@ -179,7 +159,6 @@ export function OutboundCallDetailModal({
                         value={normalizePhone(call.contactNumber)}
                         mono
                       />
-                      <AiField label="Сегмент базы" value={call.segment} />
                       <AiField
                         label="Попытка дозвона"
                         value={`${call.attempt} из 3`}
