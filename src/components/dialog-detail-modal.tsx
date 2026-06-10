@@ -12,6 +12,8 @@ import {
   User2,
   Headset,
   Headphones,
+  Link as LinkIcon,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DIALOG_CHANNEL_LABEL, type Dialog } from "@/lib/mock-data";
@@ -105,6 +107,62 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+// Строка с UID + кнопкой «Скопировать ссылку».
+// Ссылка вида <origin>?dialog=<uid> — можно отправить коллеге для глубокого перехода.
+function UidRow({ uid, label = "UID" }: { uid: string; label?: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    const link = `${origin}?dialog=${encodeURIComponent(uid)}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = link;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-navy/[0.04] px-3 py-2">
+      <span className="text-[11px] uppercase tracking-wider text-navy/55">
+        {label}
+      </span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="truncate font-mono text-[11px] text-navy" title={uid}>
+          {uid}
+        </span>
+        <button
+          onClick={handleCopy}
+          title="Скопировать ссылку на диалог"
+          aria-label="Скопировать ссылку на диалог"
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-colors",
+            copied
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-navy/15 bg-white text-navy/70 hover:border-copper hover:text-copper"
+          )}
+        >
+          {copied ? <Check size={13} /> : <LinkIcon size={13} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function DialogDetailModal({
   open,
   onClose,
@@ -151,7 +209,7 @@ export function DialogDetailModal({
               )}
             </div>
             <p className="mt-0.5 text-[11px] text-navy/45">
-              ID: {dialog.id} · тема «{dialog.topic}»
+              Тема «{dialog.topic}»
             </p>
           </div>
           <button
@@ -173,6 +231,7 @@ export function DialogDetailModal({
                   Информация о диалоге
                 </p>
                 <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
+                  <UidRow uid={dialog.id} label="UID диалога" />
                   <Row label="Канал" value={DIALOG_CHANNEL_LABEL[dialog.channel]} />
                   <Row label="Тема" value={dialog.topic} />
                   <Row

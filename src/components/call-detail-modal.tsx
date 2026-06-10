@@ -14,6 +14,8 @@ import {
   Info,
   User2,
   Headphones,
+  Link as LinkIcon,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Call } from "@/lib/mock-data";
@@ -147,7 +149,7 @@ export function CallDetailModal({
               </span>
             </div>
             <p className="mt-0.5 text-[11px] text-navy/45">
-              UID: {call.uid} · очередь {call.queue.name}
+              Очередь {call.queue.name}
             </p>
           </div>
           <button
@@ -169,6 +171,7 @@ export function CallDetailModal({
                   Информация о вызове
                 </p>
                 <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
+                  <UidRow uid={call.uid} />
                   <Row label="Номер звонящего" value={call.caller} mono />
                   <Row label="Номер назначения" value={call.destination} mono />
                   <Row label="Очередь" value={call.queue.name} />
@@ -349,6 +352,62 @@ function Row({
       <span className={cn("text-right text-navy", mono && "font-mono")}>
         {value}
       </span>
+    </div>
+  );
+}
+
+// Строка с UID + кнопкой «Скопировать ссылку на вызов».
+// Ссылка имеет формат <origin>?call=<uid> — можно отправить коллеге,
+// он откроет портал и попадёт прямо на этот вызов (deep-link).
+function UidRow({ uid }: { uid: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+    const link = `${origin}?call=${encodeURIComponent(uid)}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        // Фоллбэк для старых браузеров / iframe
+        const ta = document.createElement("textarea");
+        ta.value = link;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // молча — кнопка просто не обновит состояние
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-navy/[0.04] px-3 py-2 text-xs">
+      <span className="text-navy/55">UID вызова</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="truncate font-mono text-[11px] text-navy" title={uid}>
+          {uid}
+        </span>
+        <button
+          onClick={handleCopy}
+          title="Скопировать ссылку на вызов"
+          aria-label="Скопировать ссылку на вызов"
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-colors",
+            copied
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-navy/15 bg-white text-navy/70 hover:border-copper hover:text-copper"
+          )}
+        >
+          {copied ? <Check size={13} /> : <LinkIcon size={13} />}
+        </button>
+      </div>
     </div>
   );
 }
