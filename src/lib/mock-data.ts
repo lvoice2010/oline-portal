@@ -4593,17 +4593,17 @@ export const serviceReports: Record<string, ServiceReport> = {
     yearlyReports: {
       "2026": {
         rows: [
-          { metric: "Входящие",      values: ["2 576", "2 380", "2 440", "2 144", "2 576", null, null, null, null, null, null, null] },
-          { metric: "Принятые",      values: ["2 200", "2 040", "2 080", "1 798", "2 250", null, null, null, null, null, null, null] },
-          { metric: "Пропущенные",   values: ["376", "340", "360", "346", "326", null, null, null, null, null, null, null] },
-          { metric: "Доля пропущенных",            values: ["14.6%", "14.3%", "14.8%", "16.1%", "12.7%", null, null, null, null, null, null, null] },
-          { metric: "Service Level", values: ["96/20", "96/20", "95/20", "95/20", "97/20", null, null, null, null, null, null, null] },
-          { metric: "Среднее время ответа",           values: ["18 сек", "20 сек", "25 сек", "37 сек", "13 сек", null, null, null, null, null, null, null] },
-          { metric: "Длительность разговоров, мин", values: ["7 700", "7 170", "7 350", "6 350", "8 030", null, null, null, null, null, null, null] },
-          { metric: "Среднее время разговора",           values: ["3:30", "3:31", "3:32", "3:32", "3:34", null, null, null, null, null, null, null] },
-          { metric: "Переведённые",  values: ["340", "330", "360", "459", "364", null, null, null, null, null, null, null] },
+          { metric: "Входящие",      values: ["2 576", "2 380", "2 440", "2 144", "2 576", "1 720", null, null, null, null, null, null] },
+          { metric: "Принятые",      values: ["2 200", "2 040", "2 080", "1 798", "2 250", "1 510", null, null, null, null, null, null] },
+          { metric: "Пропущенные",   values: ["376", "340", "360", "346", "326", "210", null, null, null, null, null, null] },
+          { metric: "Доля пропущенных",            values: ["14.6%", "14.3%", "14.8%", "16.1%", "12.7%", "12.2%", null, null, null, null, null, null] },
+          { metric: "Service Level", values: ["96/20", "96/20", "95/20", "95/20", "97/20", "96/20", null, null, null, null, null, null] },
+          { metric: "Среднее время ответа",           values: ["18 сек", "20 сек", "25 сек", "37 сек", "13 сек", "15 сек", null, null, null, null, null, null] },
+          { metric: "Длительность разговоров, мин", values: ["7 700", "7 170", "7 350", "6 350", "8 030", "5 360", null, null, null, null, null, null] },
+          { metric: "Среднее время разговора",           values: ["3:30", "3:31", "3:32", "3:32", "3:34", "3:33", null, null, null, null, null, null] },
+          { metric: "Переведённые",  values: ["340", "330", "360", "459", "364", "245", null, null, null, null, null, null] },
         ],
-        insight: "За первые 5 месяцев принято 10 368 обращений — на 12% больше января-мая 2025. Общий объём разговоров — около 36 300 минут (среднее время разговора 3:32). Максимум потока пришёлся на январь и май.",
+        insight: "За 5 полных месяцев принято 10 368 обращений — на 12% больше января–мая 2025; июнь ещё идёт, за первые 20 дней принято 1 510. Общий объём разговоров — около 42 000 минут (среднее время разговора 3:32). Максимум потока пришёлся на январь и май.",
       },
       "2025": {
         rows: [
@@ -4985,16 +4985,16 @@ export const serviceReports: Record<string, ServiceReport> = {
     yearlyReports: {
       "2026": {
         rows: [
-          { metric: "Входящие",      values: ["1 350", "1 290", "1 370", "1 370", "1 480", null, null, null, null, null, null, null] },
-          { metric: "Принятые",      values: ["1 240", "1 180", "1 250", "1 230", "1 362", null, null, null, null, null, null, null] },
-          { metric: "Пропущенные",   values: ["110", "110", "120", "140", "118", null, null, null, null, null, null, null] },
-          { metric: "Доля пропущенных",            values: ["8.1%", "8.5%", "8.8%", "10.2%", "8.0%", null, null, null, null, null, null, null] },
-          { metric: "Service Level", values: ["91/20", "91/20", "92/20", "90/20", "92/20", null, null, null, null, null, null, null] },
-          { metric: "Среднее время ответа",           values: ["24 сек", "23 сек", "25 сек", "27 сек", "22 сек", null, null, null, null, null, null, null] },
-          { metric: "Длительность разговоров, мин", values: ["3 720", "3 560", "3 790", "3 790", "4 130", null, null, null, null, null, null, null] },
-          { metric: "Среднее время разговора",           values: ["3:00", "3:01", "3:02", "3:05", "3:02", null, null, null, null, null, null, null] },
+          { metric: "Входящие",      values: ["1 350", "1 290", "1 370", "1 370", "1 480", "990", null, null, null, null, null, null] },
+          { metric: "Принятые",      values: ["1 240", "1 180", "1 250", "1 230", "1 362", "910", null, null, null, null, null, null] },
+          { metric: "Пропущенные",   values: ["110", "110", "120", "140", "118", "80", null, null, null, null, null, null] },
+          { metric: "Доля пропущенных",            values: ["8.1%", "8.5%", "8.8%", "10.2%", "8.0%", "8.1%", null, null, null, null, null, null] },
+          { metric: "Service Level", values: ["91/20", "91/20", "92/20", "90/20", "92/20", "92/20", null, null, null, null, null, null] },
+          { metric: "Среднее время ответа",           values: ["24 сек", "23 сек", "25 сек", "27 сек", "22 сек", "21 сек", null, null, null, null, null, null] },
+          { metric: "Длительность разговоров, мин", values: ["3 720", "3 560", "3 790", "3 790", "4 130", "2 760", null, null, null, null, null, null] },
+          { metric: "Среднее время разговора",           values: ["3:00", "3:01", "3:02", "3:05", "3:02", "3:02", null, null, null, null, null, null] },
         ],
-        insight: "За первые 5 месяцев — 6 262 обращения принято. Общий объём разговоров около 18 900 минут (среднее 3:02 на обращение). Максимум потока в мае.",
+        insight: "За 5 полных месяцев принято 6 262 обращения; июнь ещё идёт, за первые 20 дней принято 910. Общий объём разговоров около 21 800 минут (среднее 3:02 на обращение). Максимум потока в мае.",
       },
       "2025": {
         rows: [
@@ -5326,16 +5326,16 @@ export const serviceReports: Record<string, ServiceReport> = {
     yearlyReports: {
       "2026": {
         rows: [
-          { metric: "Входящие диалогов", values: ["1 720", "1 580", "1 640", "1 720", "1 800", null, null, null, null, null, null, null] },
-          { metric: "Обработано ИИ",      values: ["1 500", "1 384", "1 442", "1 522", "1 584", null, null, null, null, null, null, null] },
-          { metric: "Эскалаций",           values: ["220", "196", "198", "198", "216", null, null, null, null, null, null, null] },
-          { metric: "Доля эскалаций",      values: ["12.8%", "12.4%", "12.1%", "11.5%", "12.0%", null, null, null, null, null, null, null] },
-          { metric: "Среднее время ответа", values: ["0.9 сек", "0.8 сек", "0.8 сек", "0.8 сек", "0.8 сек", null, null, null, null, null, null, null] },
-          { metric: "Среднее время диалога", values: ["1:35", "1:34", "1:33", "1:31", "1:30", null, null, null, null, null, null, null] },
+          { metric: "Входящие диалогов", values: ["1 720", "1 580", "1 640", "1 720", "1 800", "1 200", null, null, null, null, null, null] },
+          { metric: "Обработано ИИ",      values: ["1 500", "1 384", "1 442", "1 522", "1 584", "1 060", null, null, null, null, null, null] },
+          { metric: "Эскалаций",           values: ["220", "196", "198", "198", "216", "140", null, null, null, null, null, null] },
+          { metric: "Доля эскалаций",      values: ["12.8%", "12.4%", "12.1%", "11.5%", "12.0%", "11.7%", null, null, null, null, null, null] },
+          { metric: "Среднее время ответа", values: ["0.9 сек", "0.8 сек", "0.8 сек", "0.8 сек", "0.8 сек", "0.8 сек", null, null, null, null, null, null] },
+          { metric: "Среднее время диалога", values: ["1:35", "1:34", "1:33", "1:31", "1:30", "1:30", null, null, null, null, null, null] },
           // Голосовые диалоги по каналу «Телефон» — биллингуемые минуты у нейроассистента
-          { metric: "Длительность разговоров, мин", values: ["158", "146", "152", "162", "168", null, null, null, null, null, null, null] },
+          { metric: "Длительность разговоров, мин", values: ["158", "146", "152", "162", "168", "112", null, null, null, null, null, null] },
         ],
-        insight: "За первые 5 месяцев обработано 7 432 диалога. ИИ закрывает 88% запросов самостоятельно — основная часть нагрузки снимается с операторов на первой линии.",
+        insight: "За 5 полных месяцев обработано 7 432 диалога; июнь ещё идёт, за первые 20 дней — ещё 1 060. ИИ закрывает 88% запросов самостоятельно — основная часть нагрузки снимается с операторов на первой линии.",
       },
       "2025": {
         rows: [

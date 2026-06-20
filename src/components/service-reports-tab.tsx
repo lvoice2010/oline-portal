@@ -869,7 +869,7 @@ function KpiFunnel({
 }
 
 const RU_MONTHS = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-const CURRENT_MONTH_IDX = 4; // 5 июня 2026 → текущий месяц для подсветки = Май (индекс 4)
+const CURRENT_MONTH_IDX = 5; // 20 июня 2026 → текущий (незавершённый) месяц = Июн (индекс 5)
 
 function YearlyReportTable({
   yearlyReports,
