@@ -5,7 +5,6 @@ import {
   X,
   Play,
   Pause,
-  Volume2,
   Download,
   PhoneCall,
   Sparkles,
@@ -24,9 +23,23 @@ function fmtTime(sec: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function AudioPlayerStub({ duration }: { duration: number }) {
+// Длительность по-человечески для подписи справа: «1 мин 0 сек», «0 мин 45 сек».
+function fmtDurLong(sec: number) {
+  const m = Math.floor(Math.max(0, sec) / 60);
+  const s = Math.max(0, sec) % 60;
+  return `${m} мин ${s} сек`;
+}
+
+export function AudioPlayerStub({
+  duration,
+  uid,
+}: {
+  duration: number;
+  uid?: string;
+}) {
   const [playing, setPlaying] = React.useState(false);
   const [pos, setPos] = React.useState(0);
+  const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (!playing) return;
@@ -42,19 +55,49 @@ export function AudioPlayerStub({ duration }: { duration: number }) {
     return () => clearInterval(id);
   }, [playing, duration]);
 
+  const handleCopyLink = async () => {
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin + window.location.pathname
+        : "";
+    const link = uid ? `${origin}?call=${encodeURIComponent(uid)}` : origin;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = link;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // молча — кнопка просто не обновит состояние
+    }
+  };
+
   const pct = duration > 0 ? (pos / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
-      <button
-        onClick={() => setPlaying((p) => !p)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-copper text-white shadow-soft transition-colors hover:bg-copper-light"
-        aria-label={playing ? "Пауза" : "Воспроизвести"}
-      >
-        {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-      </button>
-      <div className="min-w-0 flex-1">
-        <div className="flex h-8 items-end gap-0.5">
+    <div className="space-y-3">
+      {/* Плеер: play · текущее время · волна · длительность */}
+      <div className="flex items-center gap-3 rounded-card border border-navy/[0.06] bg-white p-3">
+        <button
+          onClick={() => setPlaying((p) => !p)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-copper text-white shadow-soft transition-colors hover:bg-copper-light"
+          aria-label={playing ? "Пауза" : "Воспроизвести"}
+        >
+          {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+        </button>
+        <span className="shrink-0 text-xs tabular-nums text-navy/55">
+          {fmtTime(pos)}
+        </span>
+        <div className="flex h-8 min-w-0 flex-1 items-center gap-0.5">
           {/* Псевдо-волна */}
           {Array.from({ length: 60 }).map((_, i) => {
             const done = (i / 60) * 100 < pct;
@@ -71,20 +114,33 @@ export function AudioPlayerStub({ duration }: { duration: number }) {
             );
           })}
         </div>
-        <div className="mt-1.5 flex justify-between text-[10px] text-navy/55">
-          <span>{fmtTime(pos)}</span>
-          <span>{fmtTime(duration)}</span>
-        </div>
+        <span className="shrink-0 text-xs text-navy/55">
+          {fmtDurLong(duration)}
+        </span>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5 text-navy/55">
-        <Volume2 size={15} />
+
+      {/* Действия: скачать запись · скопировать ссылку */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          title="Скачать запись"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-navy/15 bg-white px-3 py-2 text-xs font-medium text-navy/80 transition-colors hover:bg-navy-50"
+        >
+          <Download size={14} /> Скачать запись
+        </button>
+        <button
+          onClick={handleCopyLink}
+          title="Скопировать ссылку на запись"
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+            copied
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-navy/15 bg-white text-navy/80 hover:bg-navy-50"
+          )}
+        >
+          {copied ? <Check size={14} /> : <LinkIcon size={14} />}
+          {copied ? "Скопировано" : "Скопировать ссылку"}
+        </button>
       </div>
-      <button
-        title="Скачать запись"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-navy/15 bg-white text-navy/70 hover:bg-navy-50"
-      >
-        <Download size={15} />
-      </button>
     </div>
   );
 }
@@ -267,7 +323,7 @@ export function CallDetailModal({
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
                 <Headphones size={12} /> Запись разговора
               </p>
-              <AudioPlayerStub duration={call.durationSec} />
+              <AudioPlayerStub duration={call.durationSec} uid={call.uid} />
             </div>
           )}
         </div>

@@ -177,7 +177,7 @@ export function OutboundCallDetailModal({
                   <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
                     <Headphones size={12} /> Запись разговора
                   </p>
-                  <AudioPlayerStub duration={call.durationSec} />
+                  <AudioPlayerStub duration={call.durationSec} uid={call.uid} />
                 </div>
               )}
             </div>

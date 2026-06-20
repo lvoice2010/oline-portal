@@ -33,6 +33,7 @@ export type ConnectedService = {
   id: string;
   name: string;
   billingNote?: string; // «Поминутная тарификация», «Выделенные операторы (FTE)»…
+  phoneNumber?: string; // подключённый номер линии (для голосовых услуг)
   stage: ServiceStage;
   metricLabel?: string; // только для active
   metricValue?: string;
@@ -94,6 +95,7 @@ export const connectedServices: ConnectedService[] = [
     id: "hotline-247",
     name: "Горячая Линия Панго Карс",
     billingNote: "Поминутная тарификация",
+    phoneNumber: "+7 800 350-24-07",
     stage: "active",
     metricLabel: "Принято за месяц",
     metricValue: "1 430",
@@ -141,6 +143,7 @@ export const connectedServices: ConnectedService[] = [
     id: "hotline-fte",
     name: "Горячая Линия Адамас",
     billingNote: "Выделенные операторы (FTE)",
+    phoneNumber: "+7 800 555-18-20",
     stage: "active",
     metricLabel: "Принято за месяц",
     metricValue: "14 320",
@@ -279,6 +282,7 @@ export const connectedServices: ConnectedService[] = [
     id: "chatbot",
     name: "Нейроассистент на входящую линию",
     billingNote: "Оплата по факту использования",
+    phoneNumber: "+7 999 200-10-10",
     stage: "active",
     usage: {
       label: "Диалогов в этом месяце",

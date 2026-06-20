@@ -159,8 +159,13 @@ export default function ServiceDetailPage({
             {service.billingNote && (
               <p className="mt-0.5 text-sm text-navy/55">{service.billingNote}</p>
             )}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {service.stage === "active" && <Badge variant="success">Активна</Badge>}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {service.stage === "active" && (
+                <Badge variant="success" className="gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Активна
+                </Badge>
+              )}
               {service.stage === "launching" && <Badge variant="info">Запуск</Badge>}
               {service.stage === "negotiating" && (
                 <Badge variant="warning">На согласовании</Badge>
@@ -170,6 +175,16 @@ export default function ServiceDetailPage({
               )}
               {service.stage === "approved" && (
                 <Badge variant="success">Согласовано</Badge>
+              )}
+              {service.phoneNumber && (
+                <a
+                  href={`tel:${service.phoneNumber.replace(/[^+\d]/g, "")}`}
+                  title={`Позвонить на линию: ${service.phoneNumber}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-white px-2.5 py-0.5 text-xs font-medium text-navy/70 transition-colors hover:border-copper hover:text-copper"
+                >
+                  <Phone size={12} />
+                  {service.phoneNumber}
+                </a>
               )}
             </div>
           </div>
