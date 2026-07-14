@@ -1054,7 +1054,7 @@ function CallbacksBlock({
       accent: true,
     },
     { label: "Длительность звонков", value: callbacks.talkLabel, hint: "среднее" },
-    { label: "Среднее время ответа", value: callbacks.asaLabel, hint: "до перезвона" },
+    { label: "Среднее время до перезвона", value: callbacks.asaLabel, hint: "с момента заявки" },
   ];
   return (
     <Card className="p-5">
