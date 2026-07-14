@@ -194,6 +194,11 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
               kpis={snap?.kpis ?? report.kpis}
               transfers={snap?.transfers ?? report.transfers}
             />
+
+            {/* Перезвоны (обратные звонки) — отдельный блок под воронкой */}
+            {(snap?.callbacks ?? report.callbacks) && (
+              <CallbacksBlock callbacks={(snap?.callbacks ?? report.callbacks)!} />
+            )}
           </div>
         );
       })()}
@@ -1029,6 +1034,74 @@ function TransfersBlock({
           </li>
         ))}
       </ul>
+    </Card>
+  );
+}
+
+// Перезвоны (обратные звонки): клиент оставил заявку на сайте — оператор перезвонил.
+// 4 показателя в ряд: поступило, % принятых, длительность звонков, ср. время ответа.
+function CallbacksBlock({
+  callbacks,
+}: {
+  callbacks: NonNullable<ServiceReport["callbacks"]>;
+}) {
+  const tiles: { label: string; value: string; hint: string; accent?: boolean }[] = [
+    { label: "Поступило", value: String(callbacks.total), hint: "заявок на обратный звонок" },
+    {
+      label: "Принято",
+      value: `${callbacks.acceptedPct.toFixed(1)}%`,
+      hint: `${callbacks.accepted} из ${callbacks.total}`,
+      accent: true,
+    },
+    { label: "Длительность звонков", value: callbacks.talkLabel, hint: "среднее" },
+    { label: "Среднее время ответа", value: callbacks.asaLabel, hint: "до перезвона" },
+  ];
+  return (
+    <Card className="p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
+            Перезвоны (обратные звонки)
+          </p>
+          <p className="mt-0.5 text-[11px] text-navy/45">
+            Клиент оставил заявку на сайте — мы перезвонили
+          </p>
+        </div>
+        <p
+          className={cn(
+            "inline-flex items-center gap-1 text-xs",
+            TONE_TEXT[callbacks.deltaTone]
+          )}
+        >
+          <DeltaIcon tone={callbacks.deltaTone} /> {callbacks.deltaLabel}
+        </p>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {tiles.map((t) => (
+          <div
+            key={t.label}
+            className={cn(
+              "rounded-card border p-3",
+              t.accent
+                ? "border-emerald-200 bg-emerald-50/50"
+                : "border-navy/[0.08] bg-navy-50/40"
+            )}
+          >
+            <p
+              className={cn(
+                "text-[10px] font-medium uppercase tracking-wider",
+                t.accent ? "text-emerald-700" : "text-navy/55"
+              )}
+            >
+              {t.label}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-navy">
+              {t.value}
+            </p>
+            <p className="text-[11px] text-navy/55 tabular-nums">{t.hint}</p>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }

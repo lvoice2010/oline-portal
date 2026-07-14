@@ -3642,6 +3642,15 @@ export type PeriodSnapshot = {
     deltaTone: ReportTone;
     destinations: { name: string; count: number; pct: number }[];
   };
+  callbacks?: {
+    total: number;
+    acceptedPct: number;
+    accepted: number;
+    talkLabel: string;
+    asaLabel: string;
+    deltaLabel: string;
+    deltaTone: ReportTone;
+  };
 };
 
 export type ServiceReport = {
@@ -3699,6 +3708,16 @@ export type ServiceReport = {
     deltaLabel: string;
     deltaTone: ReportTone;
     destinations: { name: string; count: number; pct: number }[];
+  };
+  // Перезвоны (обратные звонки): клиент оставил заявку на сайте — оператор перезвонил
+  callbacks?: {
+    total: number;         // поступило заявок на обратный звонок
+    acceptedPct: number;   // % принятых (дозвонились/обработали)
+    accepted: number;      // сколько принято (для «N из M»)
+    talkLabel: string;     // длительность звонков (среднее), напр. «1:20»
+    asaLabel: string;      // среднее время ответа, напр. «9 сек»
+    deltaLabel: string;
+    deltaTone: ReportTone;
   };
   insight: string;
   dynamics: {
@@ -4602,6 +4621,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Длительность разговоров, мин", values: ["7 700", "7 170", "7 350", "6 350", "8 030", "5 360", null, null, null, null, null, null] },
           { metric: "Среднее время разговора",           values: ["3:30", "3:31", "3:32", "3:32", "3:34", "3:33", null, null, null, null, null, null] },
           { metric: "Переведённые",  values: ["340", "330", "360", "459", "364", "245", null, null, null, null, null, null] },
+          { metric: "Перезвоны (поступило)", values: ["198", "182", "190", "176", "232", "150", null, null, null, null, null, null] },
         ],
         insight: "За 5 полных месяцев принято 10 368 обращений — на 12% больше января–мая 2025; июнь ещё идёт, за первые 20 дней принято 1 510. Общий объём разговоров — около 42 000 минут (среднее время разговора 3:32). Максимум потока пришёлся на январь и май.",
       },
@@ -4616,6 +4636,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Длительность разговоров, мин", values: ["6 590", "6 140", "6 900", "6 300", "6 520", "6 200", "5 950", "6 120", "6 800", "7 520", "9 930", "9 660"] },
           { metric: "Среднее время разговора",           values: ["3:28", "3:27", "3:29", "3:30", "3:28", "3:26", "3:25", "3:24", "3:27", "3:29", "3:35", "3:33"] },
           { metric: "Переведённые",  values: ["310", "290", "330", "320", "340", "280", "265", "240", "300", "380", "560", "540"] },
+          { metric: "Перезвоны (поступило)", values: ["176", "165", "182", "170", "185", "170", "162", "168", "188", "205", "268", "255"] },
         ],
         insight: "Год активного роста: принято 26 425 обращений (+35% к 2024). Общий объём разговоров — около 93 200 минут. Пиковые месяцы — ноябрь (Чёрная пятница, 3 240 поступивших) и декабрь (новогодний всплеск).",
       },
@@ -4630,6 +4651,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Длительность разговоров, мин", values: ["4 510", "4 260", "4 650", "4 490", "4 970", "4 700", "4 460", "4 550", "5 160", "5 920", "7 840", "7 560"] },
           { metric: "Среднее время разговора",           values: ["3:22", "3:21", "3:22", "3:24", "3:23", "3:20", "3:18", "3:18", "3:21", "3:23", "3:30", "3:28"] },
           { metric: "Переведённые",  values: ["240", "220", "250", "240", "270", "210", "200", "190", "240", "300", "440", "420"] },
+          { metric: "Перезвоны (поступило)", values: ["130", "122", "134", "128", "142", "136", "128", "134", "150", "170", "220", "210"] },
         ],
         insight: "Базовый год сотрудничества: принято 19 870 обращений, общий объём разговоров около 67 500 минут. Сезонность характерна для eCommerce — пик в Q4 (Чёрная пятница + новогодний период), летний минимум в феврале.",
       },
@@ -4729,6 +4751,15 @@ export const serviceReports: Record<string, ServiceReport> = {
         { name: "Прочее", count: 1, pct: 3 },
       ],
     },
+    callbacks: {
+      total: 232,
+      acceptedPct: 92.7,
+      accepted: 215,
+      talkLabel: "1:18",
+      asaLabel: "12 сек",
+      deltaLabel: "+13% к апрелю",
+      deltaTone: "up",
+    },
     insight:
       "В мае принято 2 250 обращений — на 25% больше апреля. Service Level держится в пределах норматива: 97/20 при цели по договору 80/20. Команда стабильно справляется с растущим потоком.",
     dynamics: [
@@ -4774,6 +4805,8 @@ export const serviceReports: Record<string, ServiceReport> = {
       { metric: "Длительность разговоров, мин", prev: "6 350", current: "8 030", delta: "+26%", tone: "up" },
       { metric: "Среднее время разговора", prev: "3:32", current: "3:34", delta: "+2 сек", tone: "neutral" },
       { metric: "Переведённые", prev: "459", current: "364", delta: "−21%", tone: "neutral" },
+      { metric: "Перезвоны (поступило)", prev: "205", current: "232", delta: "+13%", tone: "up" },
+      { metric: "Принято перезвонов, %", prev: "90.7%", current: "92.7%", delta: "+2 п.п.", tone: "up" },
     ],
     // MTD: Июнь (1–5) vs Май (1–5) — сравнение текущего MTD с тем же окном прошлого месяца
     monthOverMonthMtd: [
@@ -4786,6 +4819,8 @@ export const serviceReports: Record<string, ServiceReport> = {
       { metric: "Длительность разговоров, мин", prev: "1 300", current: "1 470", delta: "+13%", tone: "up" },
       { metric: "Среднее время разговора", prev: "3:34", current: "3:35", delta: "+1 сек", tone: "neutral" },
       { metric: "Переведённые", prev: "60", current: "70", delta: "+17%", tone: "neutral" },
+      { metric: "Перезвоны (поступило)", prev: "38", current: "44", delta: "+16%", tone: "up" },
+      { metric: "Принято перезвонов, %", prev: "92.1%", current: "93.2%", delta: "+1.1 п.п.", tone: "up" },
     ],
     distribution: [
       { name: "Обработанные", value: 2250, color: "#7CB342" },
@@ -4993,6 +5028,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Среднее время ответа",           values: ["24 сек", "23 сек", "25 сек", "27 сек", "22 сек", "21 сек", null, null, null, null, null, null] },
           { metric: "Длительность разговоров, мин", values: ["3 720", "3 560", "3 790", "3 790", "4 130", "2 760", null, null, null, null, null, null] },
           { metric: "Среднее время разговора",           values: ["3:00", "3:01", "3:02", "3:05", "3:02", "3:02", null, null, null, null, null, null] },
+          { metric: "Перезвоны (поступило)", values: ["84", "80", "86", "85", "92", "62", null, null, null, null, null, null] },
         ],
         insight: "За 5 полных месяцев принято 6 262 обращения; июнь ещё идёт, за первые 20 дней принято 910. Общий объём разговоров около 21 800 минут (среднее 3:02 на обращение). Максимум потока в мае.",
       },
@@ -5006,6 +5042,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Среднее время ответа",           values: ["22 сек", "21 сек", "22 сек", "24 сек", "23 сек", "20 сек", "20 сек", "19 сек", "23 сек", "26 сек", "28 сек", "27 сек"] },
           { metric: "Длительность разговоров, мин", values: ["3 180", "2 970", "3 330", "3 140", "3 370", "3 260", "3 070", "3 160", "3 520", "3 870", "4 360", "4 160"] },
           { metric: "Среднее время разговора",           values: ["3:00", "2:58", "3:00", "3:01", "2:59", "2:58", "2:57", "2:57", "2:59", "3:00", "3:03", "3:01"] },
+          { metric: "Перезвоны (поступило)", values: ["72", "68", "75", "70", "76", "74", "70", "72", "80", "88", "98", "95"] },
         ],
         insight: "Стабильный год: принято 13 830 обращений (+12% к 2024). Общий объём разговоров около 41 500 минут (3:00 в среднем на обращение). Сезонность умеренная — небольшой рост к концу года.",
       },
@@ -5019,6 +5056,7 @@ export const serviceReports: Record<string, ServiceReport> = {
           { metric: "Среднее время ответа",           values: ["30 сек", "28 сек", "30 сек", "32 сек", "31 сек", "27 сек", "26 сек", "25 сек", "29 сек", "33 сек", "37 сек", "35 сек"] },
           { metric: "Длительность разговоров, мин", values: ["2 450", "2 350", "2 540", "2 450", "2 610", "2 520", "2 420", "2 510", "2 710", "3 020", "3 420", "3 260"] },
           { metric: "Среднее время разговора",           values: ["2:55", "2:54", "2:55", "2:57", "2:56", "2:54", "2:53", "2:53", "2:55", "2:56", "3:00", "2:58"] },
+          { metric: "Перезвоны (поступило)", values: ["58", "55", "60", "57", "61", "59", "57", "59", "64", "71", "80", "76"] },
         ],
         insight: "Первый полный год выделенной команды: принято 11 220 обращений, общий объём разговоров около 33 000 минут. Сезонность умеренная, заметный рост к концу года.",
       },
@@ -5098,6 +5136,15 @@ export const serviceReports: Record<string, ServiceReport> = {
         { name: "Прочее", count: 1, pct: 4 },
       ],
     },
+    callbacks: {
+      total: 96,
+      acceptedPct: 94.8,
+      accepted: 91,
+      talkLabel: "1:05",
+      asaLabel: "16 сек",
+      deltaLabel: "+6% к апрелю",
+      deltaTone: "up",
+    },
     insight:
       "В мае выделенная команда обработала 1 362 обращений — на 11% больше апреля. Service Level держится в пределах норматива: 92/20 при цели по договору 80/20. Никаких отклонений по качеству обработки за период.",
     dynamics: [
@@ -5127,6 +5174,8 @@ export const serviceReports: Record<string, ServiceReport> = {
       { metric: "Среднее время ответа", prev: "27 сек", current: "22 сек", delta: "−5 сек", tone: "ok" },
       { metric: "Длительность разговоров, мин", prev: "3 790", current: "4 130", delta: "+9%", tone: "up" },
       { metric: "Среднее время разговора", prev: "3:05", current: "3:02", delta: "−3 сек", tone: "ok" },
+      { metric: "Перезвоны (поступило)", prev: "88", current: "96", delta: "+9%", tone: "up" },
+      { metric: "Принято перезвонов, %", prev: "93.2%", current: "94.8%", delta: "+1.6 п.п.", tone: "up" },
     ],
     // MTD: Июнь (1–5) vs Май (1–5)
     monthOverMonthMtd: [
@@ -5138,6 +5187,8 @@ export const serviceReports: Record<string, ServiceReport> = {
       { metric: "Среднее время ответа", prev: "22 сек", current: "22 сек", delta: "0 сек", tone: "neutral" },
       { metric: "Длительность разговоров, мин", prev: "670", current: "720", delta: "+8%", tone: "up" },
       { metric: "Среднее время разговора", prev: "3:02", current: "3:02", delta: "0 сек", tone: "neutral" },
+      { metric: "Перезвоны (поступило)", prev: "15", current: "17", delta: "+13%", tone: "up" },
+      { metric: "Принято перезвонов, %", prev: "94.0%", current: "95.0%", delta: "+1 п.п.", tone: "up" },
     ],
     distribution: [
       { name: "Обработанные", value: 1362, color: "#7CB342" },
