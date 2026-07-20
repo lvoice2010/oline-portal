@@ -168,10 +168,6 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             </span>
             <span className="text-xs text-navy/55">контактов в работе</span>
           </p>
-          <p className="mt-0.5 text-[11px] text-navy/55 tabular-nums">
-            {report.funnel.totalAttempts.toLocaleString("ru-RU")} попыток ·{" "}
-            {report.funnel.attemptsPerContact} на контакт (норматив 3)
-          </p>
 
           {/* Стек-бар: дозвонились + нет */}
           <div className="mt-5 flex h-3 w-full overflow-hidden rounded-full">
