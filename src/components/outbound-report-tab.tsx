@@ -338,6 +338,46 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
               hint="на целевом звонке"
             />
           </div>
+
+          {report.funnel.notReachedReasons &&
+            report.funnel.notReachedReasons.length > 0 && (
+              <div className="mt-5 border-t border-navy/[0.06] pt-4">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                  Причины недозвона
+                </p>
+                <p className="mt-0.5 text-[11px] text-navy/45">
+                  из {notReachedNum.toLocaleString("ru-RU")} не дозвонившихся (после
+                  3 попыток)
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {report.funnel.notReachedReasons.map((r) => {
+                    const pct =
+                      notReachedNum > 0 ? (r.count / notReachedNum) * 100 : 0;
+                    return (
+                      <li key={r.label}>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="min-w-0 flex-1 truncate text-navy/80">
+                            {r.label}
+                          </span>
+                          <span className="shrink-0 font-semibold tabular-nums text-navy">
+                            {r.count.toLocaleString("ru-RU")}
+                          </span>
+                          <span className="w-9 shrink-0 text-right text-[11px] font-medium tabular-nums text-rose-600">
+                            {pct.toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
+                          <div
+                            className="h-full rounded-full bg-rose-400"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
         </Card>
 
       </div>
