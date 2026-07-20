@@ -2694,6 +2694,7 @@ export type OutboundReport = {
     reachedPct: number;         // 68
     notReached: number;         // 1 850 — после 3 попыток не получилось
     notReachedPct: number;      // 32
+    inProgress?: number;        // контакты в процессе (набраны, статус не финальный — уйдут на след. круг)
     reachedByAttempt: {         // на какой попытке дозвонились
       first: number;            // 2 100
       second: number;           // 1 100
@@ -2798,6 +2799,7 @@ export const outboundReports: Record<string, OutboundReport> = {
       reachedPct: 68,
       notReached: 1850,
       notReachedPct: 32,
+      inProgress: 1350,
       reachedByAttempt: {
         first: 2100,
         second: 1100,

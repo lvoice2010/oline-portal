@@ -46,6 +46,16 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
   const reachedPct = report.funnel.reachedPct;
   const notReachedPct = report.funnel.notReachedPct;
   const targetsPct = (report.funnel.targets / report.funnel.reached) * 100;
+  // Контакты в процессе — набраны, но статус ещё не финальный (уйдут на следующий круг).
+  // «Обработано» = дозвон + нет дозвона (финал); шкала не доходит до 100%, пока идут круги.
+  const inProgress = report.funnel.inProgress ?? 0;
+  const processedNum = reachedNum + notReachedNum; // обработано (получен итог)
+  const takenIntoWork = processedNum + inProgress; // взято в обзвон
+  const processedPct = takenIntoWork > 0 ? Math.round((processedNum / takenIntoWork) * 100) : 0;
+  const barReached = takenIntoWork > 0 ? (reachedNum / takenIntoWork) * 100 : 0;
+  const barNotReached = takenIntoWork > 0 ? (notReachedNum / takenIntoWork) * 100 : 0;
+  const barInProgress = takenIntoWork > 0 ? (inProgress / takenIntoWork) * 100 : 0;
+  const inProgressPct = Math.round(barInProgress);
   const totalReachedByAttempt =
     report.funnel.reachedByAttempt.first +
     report.funnel.reachedByAttempt.second +
@@ -164,26 +174,46 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
           </p>
           <p className="mt-1 flex items-baseline gap-2">
             <span className="text-3xl font-semibold tabular-nums text-navy">
-              {report.funnel.contactsProcessed.toLocaleString("ru-RU")}
+              {takenIntoWork.toLocaleString("ru-RU")}
             </span>
-            <span className="text-xs text-navy/55">контактов в работе</span>
+            <span className="text-xs text-navy/55">контактов взято в обзвон</span>
+          </p>
+          <p className="mt-0.5 text-[11px] text-navy/55 tabular-nums">
+            обработано {processedNum.toLocaleString("ru-RU")} ({processedPct}%) · в
+            процессе {inProgress.toLocaleString("ru-RU")}
           </p>
 
-          {/* Стек-бар: дозвонились + нет */}
-          <div className="mt-5 flex h-3 w-full overflow-hidden rounded-full">
+          {/* Стек-бар: дозвон + нет дозвона + в процессе (ещё в кругах обзвона) */}
+          <div className="mt-5 flex h-3 w-full overflow-hidden rounded-full bg-navy-50">
             <div
               className="h-full bg-emerald-500"
-              style={{ width: `${reachedPct}%` }}
+              style={{ width: `${barReached}%` }}
               title={`Дозвон: ${reachedNum}`}
             />
             <div
               className="h-full bg-rose-400"
-              style={{ width: `${notReachedPct}%` }}
-              title={`Не дозвонились после 3 попыток: ${notReachedNum}`}
+              style={{ width: `${barNotReached}%` }}
+              title={`Нет дозвона (после 3 попыток): ${notReachedNum}`}
+            />
+            <div
+              className="h-full bg-amber-400"
+              style={{ width: `${barInProgress}%` }}
+              title={`В процессе (уйдут на следующий круг): ${inProgress}`}
             />
           </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-navy/50">
+            <span className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> дозвон
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-rose-400" /> нет дозвона
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-amber-400" /> в процессе
+            </span>
+          </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-card border border-emerald-200 bg-emerald-50/50 p-3">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -195,7 +225,7 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
                 {reachedPct}%
               </p>
               <p className="text-[11px] text-navy/55 tabular-nums">
-                {reachedNum.toLocaleString("ru-RU")} контактов
+                {reachedNum.toLocaleString("ru-RU")} · от обработанных
               </p>
             </div>
             <div className="rounded-card border border-rose-200 bg-rose-50/50 p-3">
@@ -210,6 +240,20 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
               </p>
               <p className="text-[11px] text-navy/55 tabular-nums">
                 {notReachedNum.toLocaleString("ru-RU")} · после 3 попыток
+              </p>
+            </div>
+            <div className="rounded-card border border-amber-200 bg-amber-50/50 p-3">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <p className="text-[11px] font-medium uppercase tracking-wider text-amber-700">
+                  В процессе
+                </p>
+              </div>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-navy">
+                {inProgress.toLocaleString("ru-RU")}
+              </p>
+              <p className="text-[11px] text-navy/55 tabular-nums">
+                ещё в обзвоне · {inProgressPct}%
               </p>
             </div>
           </div>
