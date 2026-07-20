@@ -97,7 +97,7 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
         <div className="mt-5">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm text-navy/70">
-              База:{" "}
+              В обзвоне:{" "}
               <span className="font-semibold tabular-nums text-navy">
                 {report.campaign.baseProcessed.toLocaleString("ru-RU")}
               </span>{" "}
@@ -105,7 +105,7 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
               <span className="font-medium tabular-nums text-navy/85">
                 {report.campaign.baseTotal.toLocaleString("ru-RU")}
               </span>{" "}
-              контактов
+              контактов базы
             </p>
             <p className="text-sm font-semibold tabular-nums text-copper">
               {basePct}%
