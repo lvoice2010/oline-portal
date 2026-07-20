@@ -46,19 +46,10 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
   const reachedPct = report.funnel.reachedPct;
   const notReachedPct = report.funnel.notReachedPct;
   const targetsPct = (report.funnel.targets / report.funnel.reached) * 100;
-  // Круги обзвона: не дозвонившиеся переходят в следующий круг.
-  // Процент дозвона в каждом круге считаем от контактов, которым в нём звонили.
-  const rb = report.funnel.reachedByAttempt;
-  const reachRounds = [
-    { label: "1-й круг", called: report.funnel.contactsProcessed, reached: rb.first },
-    { label: "2-й круг", called: report.funnel.contactsProcessed - rb.first, reached: rb.second },
-    { label: "3-й круг", called: report.funnel.contactsProcessed - rb.first - rb.second, reached: rb.third },
-  ].map((r, i) => ({
-    ...r,
-    reachPct: r.called > 0 ? (r.reached / r.called) * 100 : 0,
-    remaining: r.called - r.reached,
-    isLast: i === 2,
-  }));
+  const totalReachedByAttempt =
+    report.funnel.reachedByAttempt.first +
+    report.funnel.reachedByAttempt.second +
+    report.funnel.reachedByAttempt.third;
 
   return (
     <div className="space-y-6">
@@ -178,7 +169,8 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             <span className="text-xs text-navy/55">контактов в работе</span>
           </p>
           <p className="mt-0.5 text-[11px] text-navy/55 tabular-nums">
-            в среднем {report.funnel.attemptsPerContact} попытки на контакт · норматив 3
+            {report.funnel.totalAttempts.toLocaleString("ru-RU")} попыток ·{" "}
+            {report.funnel.attemptsPerContact} на контакт (норматив 3)
           </p>
 
           {/* Стек-бар: дозвонились + нет */}
@@ -226,45 +218,47 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             </div>
           </div>
 
-          {/* Дозвон по кругам обзвона — % дозвона от контактов, которым звонили в круге */}
+          {/* На какой попытке дозвонились */}
           <div className="mt-4 rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
             <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
-              Дозвон по кругам обзвона
+              Дозвон по попыткам
             </p>
-            <div className="mt-2 space-y-2.5">
-              {reachRounds.map((r) => (
-                <div key={r.label} className="space-y-0.5">
-                  <div className="flex items-baseline justify-between gap-2 text-[11px]">
-                    <span className="text-navy/75">
-                      {r.label} · обзвонили{" "}
+            <div className="mt-2 space-y-1.5">
+              {[
+                {
+                  label: "1-я попытка",
+                  count: report.funnel.reachedByAttempt.first,
+                },
+                {
+                  label: "2-я попытка",
+                  count: report.funnel.reachedByAttempt.second,
+                },
+                {
+                  label: "3-я попытка",
+                  count: report.funnel.reachedByAttempt.third,
+                },
+              ].map((r) => {
+                const pct = (r.count / totalReachedByAttempt) * 100;
+                return (
+                  <div key={r.label} className="space-y-0.5">
+                    <div className="flex items-baseline justify-between gap-2 text-[11px]">
+                      <span className="text-navy/75">{r.label}</span>
                       <span className="tabular-nums text-navy/60">
-                        {r.called.toLocaleString("ru-RU")}
+                        <span className="font-semibold text-navy">
+                          {r.count.toLocaleString("ru-RU")}
+                        </span>{" "}
+                        · {pct.toFixed(0)}%
                       </span>
-                    </span>
-                    <span className="tabular-nums text-navy/60">
-                      дозвон{" "}
-                      <span className="font-semibold text-navy">
-                        {r.reached.toLocaleString("ru-RU")}
-                      </span>{" "}
-                      ·{" "}
-                      <span className="font-semibold text-emerald-600">
-                        {r.reachPct.toFixed(0)}%
-                      </span>
-                    </span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-navy-50">
+                      <div
+                        className="h-full rounded-full bg-emerald-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-navy-50">
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{ width: `${r.reachPct}%` }}
-                    />
-                  </div>
-                  <p className="text-right text-[10px] tabular-nums text-navy/45">
-                    {r.isLast
-                      ? `не дозвонились: ${r.remaining.toLocaleString("ru-RU")}`
-                      : `осталось на след. круг: ${r.remaining.toLocaleString("ru-RU")}`}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

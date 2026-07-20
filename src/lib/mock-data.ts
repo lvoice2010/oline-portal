@@ -2688,8 +2688,8 @@ export type OutboundReport = {
   };
   funnel: {
     contactsProcessed: number;  // 5 750 — уникальных контактов в работе
-    totalAttempts: number;      // 11 950 — попыток всего (с учётом кругов дозвона)
-    attemptsPerContact: number; // 2.1 — среднее
+    totalAttempts: number;      // 10 350 — попыток сделано всего
+    attemptsPerContact: number; // 1.8 — среднее
     reached: number;            // 3 900 — дозвонились
     reachedPct: number;         // 68
     notReached: number;         // 1 850 — после 3 попыток не получилось
@@ -2792,8 +2792,8 @@ export const outboundReports: Record<string, OutboundReport> = {
     },
     funnel: {
       contactsProcessed: 5750,
-      totalAttempts: 11950,
-      attemptsPerContact: 2.1,
+      totalAttempts: 10350,
+      attemptsPerContact: 1.8,
       reached: 3900,
       reachedPct: 68,
       notReached: 1850,
