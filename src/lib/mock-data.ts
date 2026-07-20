@@ -2782,7 +2782,7 @@ export const outboundReports: Record<string, OutboundReport> = {
       endDate: "30.06.2026",
       today: "04.06.2026",
       baseTotal: 12500,
-      baseProcessed: 7100, // взято в обзвон (обработано 5 750 + в процессе 1 350)
+      baseProcessed: 5750, // обработано — контакты с финальным статусом (дозвон + недозвон)
       daysLeft: 26,
       pacePerDay: 260,
       onTrack: true,
