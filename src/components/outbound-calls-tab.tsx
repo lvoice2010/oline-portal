@@ -46,7 +46,9 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<OutboundCall | null>(null);
 
-  const serviceCalls = outboundCalls.filter((c) => c.serviceId === serviceId);
+  // FTE-исход переиспользует журнал проектной исходящей
+  const callsServiceId = serviceId === "outbound-fte" ? "outbound-q2" : serviceId;
+  const serviceCalls = outboundCalls.filter((c) => c.serviceId === callsServiceId);
   const now = new Date();
   const days = period === "today" ? 1 : period === "week" ? 7 : period === "month" ? 31 : null;
   const cutoff = days !== null ? new Date(now.getTime() - days * 86400000) : null;

@@ -72,6 +72,10 @@ function getTabsForService(serviceId: string) {
   return [TAB_REPORTS, TAB_ANALYTICS, TAB_SCRIPT, TAB_CALLS];
 }
 
+// Услуги исходящего обзвона — используют отчёт/аналитику/журнал исходящей
+// (проектная кампания и FTE-исход показывают одинаковый отчёт).
+const OUTBOUND_SERVICES = new Set(["outbound-q2", "outbound-fte"]);
+
 type TabId =
   | typeof TAB_REPORTS.id
   | typeof TAB_ANALYTICS.id
@@ -338,20 +342,20 @@ export default function ServiceDetailPage({
         <ServiceScriptTab serviceId={service.id} variant="knowledge" />
       )}
       {tab === "calls" &&
-        (service.id === "outbound-q2" ? (
+        (OUTBOUND_SERVICES.has(service.id) ? (
           <OutboundCallsTab serviceId={service.id} />
         ) : (
           <CallsTab serviceId={service.id} />
         ))}
       {tab === "dialogs" && <DialogsTab serviceId={service.id} />}
       {tab === "reports" &&
-        (service.id === "outbound-q2" ? (
+        (OUTBOUND_SERVICES.has(service.id) ? (
           <OutboundReportTab serviceId={service.id} />
         ) : (
           <ServiceReportsTab serviceId={service.id} />
         ))}
       {tab === "analytics" &&
-        (service.id === "outbound-q2" ? (
+        (OUTBOUND_SERVICES.has(service.id) ? (
           <OutboundAnalyticsTab serviceId={service.id} />
         ) : (
           <ServiceAnalyticsTab serviceId={service.id} />

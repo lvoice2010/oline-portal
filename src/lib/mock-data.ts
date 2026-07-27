@@ -187,6 +187,50 @@ export const connectedServices: ConnectedService[] = [
     ],
   },
   {
+    id: "outbound-fte",
+    name: "Исходящая на выделенных специалистах",
+    billingNote: "Выделенные специалисты (FTE)",
+    stage: "active",
+    metricLabel: "Целевых за месяц",
+    metricValue: "1 180",
+    usage: { label: "Чел-часов в этом месяце", used: 96, limit: 168, unit: "чел-ч" },
+    extraMetrics: [
+      {
+        label: "FTE",
+        value: "1 чел.",
+        tone: "neutral",
+        tooltip:
+          "Full-Time Equivalent — выделенный специалист на исходящий обзвон на полную смену. По договору — 168 чел-часов в месяц.",
+      },
+      {
+        label: "Звонков/час",
+        value: "18",
+        tone: "neutral",
+        tooltip: "Среднее число звонков, которые специалист делает за час работы.",
+      },
+      {
+        label: "Конверсия",
+        value: "22%",
+        tone: "ok",
+        tooltip: "Доля дозвонившихся, сделавших целевое действие.",
+      },
+    ],
+    submittedAt: "05.03.2026",
+    connectedAt: "20.03.2026",
+    manager: { name: "Перерва Валерия", initials: "ПВ", phone: "+7 (495) 120-45-71", telegram: "pererva_oline", email: "v.pererva@oline.ru" },
+    tariff: "FTE-исход, 1 специалист, пакет 168 чел-ч/мес",
+    contract: "№ 08-03/2026 от 12.03.2026",
+    counterparty: "ООО «Перформанс Контакт»",
+    schedule: "Пн–Пт, 10:00–19:00 (мск)",
+    includes: [
+      "Закреплённый специалист на исходящий обзвон под ваш проект",
+      "Оплата по часам — пакет 168 чел-часов в месяц",
+      "Работа по вашим скриптам, погружение в продукт",
+      "Запись и стенограмма всех разговоров, хранение 90 дней",
+      "Ежемесячный отчёт по кампании",
+    ],
+  },
+  {
     id: "outbound-q2",
     name: "Исходящая кампания Q2 2026",
     stage: "active",
@@ -5538,3 +5582,15 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
   },
 };
+
+// ── Исходящая на выделенных специалистах (FTE) ──
+// Отчёт, аналитика и журнал вызовов — те же, что у проектной исходящей
+// (переиспользуем данные); у отчёта меняем только название кампании.
+outboundReports["outbound-fte"] = {
+  ...outboundReports["outbound-q2"],
+  campaign: {
+    ...outboundReports["outbound-q2"].campaign,
+    name: "Исходящая на выделенных специалистах",
+  },
+};
+outboundAnalytics["outbound-fte"] = outboundAnalytics["outbound-q2"];
