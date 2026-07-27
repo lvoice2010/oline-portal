@@ -104,8 +104,10 @@ function UsageBar({ usage }: { usage: NonNullable<ConnectedService["usage"]> }) 
 
 function MetricTile({
   metric,
+  align = "center",
 }: {
   metric: NonNullable<ConnectedService["extraMetrics"]>[number];
+  align?: "left" | "center" | "right";
 }) {
   const [hover, setHover] = React.useState(false);
   return (
@@ -137,10 +139,22 @@ function MetricTile({
       {metric.tooltip && hover && (
         <div
           role="tooltip"
-          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-xs leading-relaxed text-white shadow-soft-lg"
+          className={cn(
+            "pointer-events-none absolute top-full z-50 mt-2 w-56 rounded-lg bg-navy px-3 py-2 text-xs leading-relaxed text-white shadow-soft-lg",
+            align === "left" && "left-0",
+            align === "center" && "left-1/2 -translate-x-1/2",
+            align === "right" && "right-0"
+          )}
         >
           {metric.tooltip}
-          <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[5px] border-x-transparent border-t-navy" />
+          <div
+            className={cn(
+              "absolute bottom-full h-0 w-0 border-x-[5px] border-b-[5px] border-x-transparent border-b-navy",
+              align === "left" && "left-3",
+              align === "center" && "left-1/2 -translate-x-1/2",
+              align === "right" && "right-3"
+            )}
+          />
         </div>
       )}
     </div>
@@ -162,8 +176,12 @@ function ServiceCardBody({ s }: { s: ConnectedService }) {
               s.extraMetrics.length === 2 ? "grid-cols-2" : "grid-cols-3"
             )}
           >
-            {s.extraMetrics.map((m) => (
-              <MetricTile key={m.label} metric={m} />
+            {s.extraMetrics.map((m, i, arr) => (
+              <MetricTile
+                key={m.label}
+                metric={m}
+                align={i === 0 ? "left" : i === arr.length - 1 ? "right" : "center"}
+              />
             ))}
           </div>
         )}
