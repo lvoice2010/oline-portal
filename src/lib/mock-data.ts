@@ -154,7 +154,7 @@ export const connectedServices: ConnectedService[] = [
         value: "4 чел.",
         tone: "neutral",
         tooltip:
-          "Full-Time Equivalent — количество операторов, выделенных на проект на полную смену.",
+          "Full-Time Equivalent — количество операторов, выделенных на проект на полную смену. По договору — 720 чел-часов в месяц.",
       },
       {
         label: "ASA",
