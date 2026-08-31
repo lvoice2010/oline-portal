@@ -25,6 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { shiftDateString, monthShift } from "@/lib/demo-clock";
 import {
   connectedServices,
   calls,
@@ -512,7 +513,9 @@ function ReportsActionsBlock({ serviceId }: { serviceId: string }) {
   const latest = serviceReports[0];
   if (!latest) return null;
 
-  const monthLower = latest.period.split(" ")[0].toLowerCase();
+  // Демо-«сегодня»: сдвигаем месяц последнего отчёта к реальной дате
+  const period = shiftDateString(latest.period, monthShift());
+  const monthLower = period.split(" ")[0].toLowerCase();
   return (
     <div className="flex w-[220px] flex-col gap-1.5 rounded-xl border border-navy/[0.06] bg-white p-2 shadow-soft">
       <p className="px-1 pt-0.5 text-[10px] uppercase tracking-wider text-navy/40">
@@ -520,8 +523,8 @@ function ReportsActionsBlock({ serviceId }: { serviceId: string }) {
       </p>
       <a
         href="/sample-invoice.pdf"
-        download={`Отчёт_${latest.period.replace(/\s+/g, "_")}.pdf`}
-        title={`Скачать PDF-отчёт за ${latest.period}`}
+        download={`Отчёт_${period.replace(/\s+/g, "_")}.pdf`}
+        title={`Скачать PDF-отчёт за ${period}`}
         className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-navy-light"
       >
         <Download size={13} /> Скачать за {monthLower}
