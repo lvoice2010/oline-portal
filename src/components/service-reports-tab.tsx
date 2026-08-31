@@ -434,17 +434,16 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                   key={r.metric}
                   className="border-b border-navy/[0.04] last:border-0"
                 >
-                  <td
-                    className={cn(
-                      "py-1.5 text-navy/75",
-                      r.indent && "pl-4 text-navy/60"
-                    )}
-                  >
-                    {r.indent && (
-                      <span className="mr-1 text-navy/30">↳</span>
-                    )}
-                    {r.metric}
-                  </td>
+                  {r.indent ? (
+                    <td className="py-0 pl-3 text-navy/60">
+                      {/* линия-дерево: вертикаль слева объединяет разбивку «Поступивших» */}
+                      <span className="block border-l-[1.5px] border-navy/20 py-1.5 pl-3">
+                        {r.metric}
+                      </span>
+                    </td>
+                  ) : (
+                    <td className="py-1.5 text-navy/75">{r.metric}</td>
+                  )}
                   <td className="py-1.5 text-right font-medium text-navy tabular-nums">
                     {r.current}
                   </td>
