@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Topbar } from "@/components/layout/topbar";
+import { AppShell } from "@/components/layout/app-shell";
 import { ToastProvider } from "@/components/ui/toast";
 import { ProjectProvider } from "@/components/providers/project-provider";
 
@@ -19,13 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <ToastProvider>
           <ProjectProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <Topbar />
-                <main className="flex-1 px-8 py-7">{children}</main>
-              </div>
-            </div>
+            <AppShell>{children}</AppShell>
           </ProjectProvider>
         </ToastProvider>
       </body>

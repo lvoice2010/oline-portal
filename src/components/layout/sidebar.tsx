@@ -6,6 +6,7 @@ import * as React from "react";
 import {
   FileText,
   LogOut,
+  X,
   ChevronDown,
   Zap,
   LayoutDashboard,
@@ -46,20 +47,42 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({
+  open = false,
+  onClose,
+}: {
+  open?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-navy text-white">
-      <Link href="/dashboard" className="block px-6 py-6 hover:opacity-90">
-        <Logo size={34} variant="on-dark" />
-        <p className="mt-2 text-[11px] uppercase tracking-wider text-white/45">
-          Клиентский портал
-        </p>
-      </Link>
+    <aside
+      className={cn(
+        // Мобайл: выезжающий drawer поверх контента; ≥lg — обычный липкий сайдбар
+        "fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col bg-navy text-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-30 lg:translate-x-0",
+        open ? "translate-x-0 shadow-soft-lg" : "-translate-x-full"
+      )}
+    >
+      <div className="flex items-start justify-between px-6 py-6">
+        <Link href="/dashboard" className="block hover:opacity-90">
+          <Logo size={34} variant="on-dark" />
+          <p className="mt-2 text-[11px] uppercase tracking-wider text-white/45">
+            Клиентский портал
+          </p>
+        </Link>
+        {/* Закрыть меню — только на мобиле */}
+        <button
+          onClick={onClose}
+          className="-mr-1 rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white lg:hidden"
+          aria-label="Закрыть меню"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-3">
         {/* Главная */}
