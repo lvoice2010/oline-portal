@@ -3799,6 +3799,7 @@ export type ServiceReport = {
     current: string;
     delta: string;
     tone: ReportTone;
+    indent?: boolean; // визуальный отступ (Принятые/Пропущенные — как разбивка Поступивших)
   }[];
   // Тот же набор показателей, но за MTD: текущий месяц на N дней vs прошлый месяц за тот же диапазон дней
   monthOverMonthMtd?: {
@@ -3807,6 +3808,7 @@ export type ServiceReport = {
     current: string;
     delta: string;
     tone: ReportTone;
+    indent?: boolean;
   }[];
   distribution?: { name: string; value: number; color: string }[];
   heatmap: { days: string[]; hours: string[]; data: number[][] };
@@ -4863,31 +4865,31 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // Закрытые месяцы: Май vs Апрель (значения по умолчанию, безопасное сравнение)
     monthOverMonth: [
-      { metric: "Входящие", prev: "2 144", current: "2 576", delta: "+20%", tone: "up" },
-      { metric: "Принятые", prev: "1 798", current: "2 250", delta: "+25%", tone: "up" },
-      { metric: "Пропущенные", prev: "346", current: "326", delta: "−6%", tone: "ok" },
-      { metric: "Доля пропущенных", prev: "16.1%", current: "12.7%", delta: "−3.4 п.п.", tone: "ok" },
+      { metric: "Поступившие (зачётные)", prev: "2 048", current: "2 486", delta: "+21%", tone: "up" },
+      { metric: "Принятые", prev: "1 798 (87.8%)", current: "2 250 (90.5%)", delta: "+25%", tone: "up", indent: true },
+      { metric: "Пропущенные", prev: "250 (12.2%)", current: "236 (9.5%)", delta: "−6%", tone: "ok", indent: true },
+      { metric: "Короткие сбросы", prev: "96", current: "90", delta: "−6%", tone: "ok" },
       { metric: "Service Level", prev: "95/20", current: "97/20", delta: "+2 п.п.", tone: "up" },
-      { metric: "Среднее время ответа", prev: "37 сек", current: "13 сек", delta: "−24 сек", tone: "ok" },
+      { metric: "Среднее время ответа (ASA)", prev: "37 сек", current: "13 сек", delta: "−24 сек", tone: "ok" },
+      { metric: "Среднее время разговора (AHT)", prev: "3:32", current: "3:34", delta: "+2 сек", tone: "neutral" },
       { metric: "Длительность разговоров, мин", prev: "6 350", current: "8 030", delta: "+26%", tone: "up" },
-      { metric: "Среднее время разговора", prev: "3:32", current: "3:34", delta: "+2 сек", tone: "neutral" },
-      { metric: "Переведённые", prev: "459", current: "364", delta: "−21%", tone: "neutral" },
-      { metric: "Перезвоны (поступило)", prev: "205", current: "232", delta: "+13%", tone: "up" },
-      { metric: "Принято перезвонов, %", prev: "90.7%", current: "92.7%", delta: "+2 п.п.", tone: "up" },
+      { metric: "Переведённые", prev: "459 (22.4%)", current: "364 (14.6%)", delta: "−21%", tone: "neutral" },
+      { metric: "Повторные обращения", prev: "810 (39.6%)", current: "792 (31.9%)", delta: "−2%", tone: "ok" },
+      { metric: "Перезвоны по заявке", prev: "205", current: "232", delta: "+13%", tone: "up" },
     ],
     // MTD: Июнь (1–5) vs Май (1–5) — сравнение текущего MTD с тем же окном прошлого месяца
     monthOverMonthMtd: [
-      { metric: "Входящие", prev: "415", current: "467", delta: "+12.5%", tone: "up" },
-      { metric: "Принятые", prev: "365", current: "410", delta: "+12.3%", tone: "up" },
-      { metric: "Пропущенные", prev: "50", current: "57", delta: "+14%", tone: "warn" },
-      { metric: "Доля пропущенных", prev: "12.0%", current: "12.2%", delta: "+0.2 п.п.", tone: "neutral" },
+      { metric: "Поступившие (зачётные)", prev: "400", current: "450", delta: "+12.5%", tone: "up" },
+      { metric: "Принятые", prev: "365 (91.3%)", current: "410 (91.1%)", delta: "+12.3%", tone: "up", indent: true },
+      { metric: "Пропущенные", prev: "35 (8.8%)", current: "40 (8.9%)", delta: "+14%", tone: "warn", indent: true },
+      { metric: "Короткие сбросы", prev: "15", current: "17", delta: "+13%", tone: "neutral" },
       { metric: "Service Level", prev: "97/20", current: "96/20", delta: "−1 п.п.", tone: "neutral" },
-      { metric: "Среднее время ответа", prev: "13 сек", current: "14 сек", delta: "+1 сек", tone: "neutral" },
+      { metric: "Среднее время ответа (ASA)", prev: "13 сек", current: "14 сек", delta: "+1 сек", tone: "neutral" },
+      { metric: "Среднее время разговора (AHT)", prev: "3:34", current: "3:35", delta: "+1 сек", tone: "neutral" },
       { metric: "Длительность разговоров, мин", prev: "1 300", current: "1 470", delta: "+13%", tone: "up" },
-      { metric: "Среднее время разговора", prev: "3:34", current: "3:35", delta: "+1 сек", tone: "neutral" },
-      { metric: "Переведённые", prev: "60", current: "70", delta: "+17%", tone: "neutral" },
-      { metric: "Перезвоны (поступило)", prev: "38", current: "44", delta: "+16%", tone: "up" },
-      { metric: "Принято перезвонов, %", prev: "92.1%", current: "93.2%", delta: "+1.1 п.п.", tone: "up" },
+      { metric: "Переведённые", prev: "60 (15.0%)", current: "70 (15.6%)", delta: "+17%", tone: "neutral" },
+      { metric: "Повторные обращения", prev: "156 (39.0%)", current: "162 (36.0%)", delta: "+4%", tone: "ok" },
+      { metric: "Перезвоны по заявке", prev: "38", current: "44", delta: "+16%", tone: "up" },
     ],
     distribution: [
       { name: "Обработанные", value: 2250, color: "#7CB342" },
@@ -5233,29 +5235,31 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // Закрытые месяцы: Май vs Апрель
     monthOverMonth: [
-      { metric: "Входящие", prev: "1 370", current: "1 480", delta: "+8%", tone: "up" },
-      { metric: "Принятые", prev: "1 230", current: "1 362", delta: "+11%", tone: "up" },
-      { metric: "Пропущенные", prev: "140", current: "118", delta: "−16%", tone: "ok" },
-      { metric: "Доля пропущенных", prev: "10.2%", current: "8.0%", delta: "−2.2 п.п.", tone: "ok" },
+      { metric: "Поступившие (зачётные)", prev: "1 318", current: "1 435", delta: "+9%", tone: "up" },
+      { metric: "Принятые", prev: "1 230 (93.3%)", current: "1 362 (94.9%)", delta: "+11%", tone: "up", indent: true },
+      { metric: "Пропущенные", prev: "88 (6.7%)", current: "73 (5.1%)", delta: "−17%", tone: "ok", indent: true },
+      { metric: "Короткие сбросы", prev: "52", current: "45", delta: "−13%", tone: "ok" },
       { metric: "Service Level", prev: "90/20", current: "92/20", delta: "+2 п.п.", tone: "up" },
-      { metric: "Среднее время ответа", prev: "27 сек", current: "22 сек", delta: "−5 сек", tone: "ok" },
+      { metric: "Среднее время ответа (ASA)", prev: "27 сек", current: "22 сек", delta: "−5 сек", tone: "ok" },
+      { metric: "Среднее время разговора (AHT)", prev: "3:05", current: "3:02", delta: "−3 сек", tone: "ok" },
       { metric: "Длительность разговоров, мин", prev: "3 790", current: "4 130", delta: "+9%", tone: "up" },
-      { metric: "Среднее время разговора", prev: "3:05", current: "3:02", delta: "−3 сек", tone: "ok" },
-      { metric: "Перезвоны (поступило)", prev: "88", current: "96", delta: "+9%", tone: "up" },
-      { metric: "Принято перезвонов, %", prev: "93.2%", current: "94.8%", delta: "+1.6 п.п.", tone: "up" },
+      { metric: "Переведённые", prev: "78 (5.9%)", current: "64 (4.5%)", delta: "−18%", tone: "neutral" },
+      { metric: "Повторные обращения", prev: "395 (30.0%)", current: "402 (28.0%)", delta: "+2%", tone: "ok" },
+      { metric: "Перезвоны по заявке", prev: "88", current: "96", delta: "+9%", tone: "up" },
     ],
     // MTD: Июнь (1–5) vs Май (1–5)
     monthOverMonthMtd: [
-      { metric: "Входящие", prev: "238", current: "258", delta: "+8.4%", tone: "up" },
-      { metric: "Принятые", prev: "220", current: "238", delta: "+8.2%", tone: "up" },
-      { metric: "Пропущенные", prev: "18", current: "20", delta: "+11%", tone: "neutral" },
-      { metric: "Доля пропущенных", prev: "7.6%", current: "7.8%", delta: "+0.2 п.п.", tone: "neutral" },
+      { metric: "Поступившие (зачётные)", prev: "231", current: "250", delta: "+8.2%", tone: "up" },
+      { metric: "Принятые", prev: "220 (95.2%)", current: "238 (95.2%)", delta: "+8.2%", tone: "up", indent: true },
+      { metric: "Пропущенные", prev: "11 (4.8%)", current: "12 (4.8%)", delta: "+9%", tone: "neutral", indent: true },
+      { metric: "Короткие сбросы", prev: "7", current: "8", delta: "+14%", tone: "neutral" },
       { metric: "Service Level", prev: "92/20", current: "92/20", delta: "0 п.п.", tone: "neutral" },
-      { metric: "Среднее время ответа", prev: "22 сек", current: "22 сек", delta: "0 сек", tone: "neutral" },
+      { metric: "Среднее время ответа (ASA)", prev: "22 сек", current: "22 сек", delta: "0 сек", tone: "neutral" },
+      { metric: "Среднее время разговора (AHT)", prev: "3:02", current: "3:02", delta: "0 сек", tone: "neutral" },
       { metric: "Длительность разговоров, мин", prev: "670", current: "720", delta: "+8%", tone: "up" },
-      { metric: "Среднее время разговора", prev: "3:02", current: "3:02", delta: "0 сек", tone: "neutral" },
-      { metric: "Перезвоны (поступило)", prev: "15", current: "17", delta: "+13%", tone: "up" },
-      { metric: "Принято перезвонов, %", prev: "94.0%", current: "95.0%", delta: "+1 п.п.", tone: "up" },
+      { metric: "Переведённые", prev: "13 (5.6%)", current: "12 (4.8%)", delta: "−8%", tone: "neutral" },
+      { metric: "Повторные обращения", prev: "70 (30.3%)", current: "72 (28.8%)", delta: "+3%", tone: "ok" },
+      { metric: "Перезвоны по заявке", prev: "15", current: "17", delta: "+13%", tone: "up" },
     ],
     distribution: [
       { name: "Обработанные", value: 1362, color: "#7CB342" },

@@ -55,7 +55,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col bg-navy text-white">
       <Link href="/dashboard" className="block px-6 py-6 hover:opacity-90">
-        <Logo size={28} variant="on-dark" />
+        <Logo size={34} variant="on-dark" />
         <p className="mt-2 text-[11px] uppercase tracking-wider text-white/45">
           Клиентский портал
         </p>

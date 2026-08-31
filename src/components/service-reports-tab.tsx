@@ -434,7 +434,17 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                   key={r.metric}
                   className="border-b border-navy/[0.04] last:border-0"
                 >
-                  <td className="py-1.5 text-navy/75">{r.metric}</td>
+                  <td
+                    className={cn(
+                      "py-1.5 text-navy/75",
+                      r.indent && "pl-4 text-navy/60"
+                    )}
+                  >
+                    {r.indent && (
+                      <span className="mr-1 text-navy/30">↳</span>
+                    )}
+                    {r.metric}
+                  </td>
                   <td className="py-1.5 text-right font-medium text-navy tabular-nums">
                     {r.current}
                   </td>

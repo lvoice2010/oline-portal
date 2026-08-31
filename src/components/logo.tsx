@@ -59,23 +59,24 @@ export function Logo({
   size = 28,
   variant = "default",
   className,
-  textClassName,
 }: {
   size?: number;
   variant?: Variant;
   className?: string;
+  /** @deprecated логотип теперь растровый, отдельного текста нет */
   textClassName?: string;
 }) {
-  const textColor = variant === "on-dark" ? WHITE : DARK;
+  // Растровый брендовый логотип: на тёмном фоне — белая версия,
+  // на светлом — полноцветная (со слоганом). size = высота в px, ширина auto.
+  const src = variant === "on-dark" ? "/logo-white.png" : "/logo-horizontal.png";
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <LogoMark size={size} variant={variant} />
-      <span
-        className={cn("font-black tracking-tight", textClassName)}
-        style={{ fontSize: size * 0.78, color: textColor, letterSpacing: "-0.02em" }}
-      >
-        LINE
-      </span>
+    <span className={cn("inline-flex items-center", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt="O'LINE — контакт-центр «Открытая линия»"
+        style={{ height: size, width: "auto" }}
+      />
     </span>
   );
 }
