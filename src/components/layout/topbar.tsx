@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Bell, ChevronRight, Coins, AlertTriangle, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notifications, documents } from "@/lib/mock-data";
+import { demoizeDeep, monthShift } from "@/lib/demo-clock";
 
 const LABELS: Record<string, string> = {
   dashboard: "Главная",
@@ -125,7 +126,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
               <p className="border-b border-navy/[0.06] px-4 py-3 text-sm font-semibold text-navy">
                 Уведомления
               </p>
-              {notifications.map((n, i) => (
+              {demoizeDeep(notifications, monthShift()).map((n, i) => (
                 <div
                   key={i}
                   className="border-b border-navy/[0.04] px-4 py-3 text-sm text-navy/75 last:border-0"

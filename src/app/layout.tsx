@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   description: "Прототип клиентского портала O'LINE",
 };
 
+// Демо-данные считаются от реальной даты (см. lib/demo-clock) — рендерим
+// динамически, чтобы кабинет всегда был «на сегодня» без пересборки.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={inter.variable}>

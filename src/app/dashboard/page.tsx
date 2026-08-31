@@ -26,6 +26,7 @@ import {
   type ServiceStage,
   type ConnectedService,
 } from "@/lib/mock-data";
+import { demoizeDeep, monthShift } from "@/lib/demo-clock";
 
 const alertIcon = { warning: AlertTriangle, info: Info, success: CheckCircle2 };
 
@@ -231,8 +232,11 @@ export default function DashboardPage() {
   const [dismissed, setDismissed] = React.useState<Set<string>>(new Set());
   const [allAlertsOpen, setAllAlertsOpen] = React.useState(false);
 
+  // Демо-«сегодня»: сдвигаем даты алертов от реальной даты
+  const alertsD = React.useMemo(() => demoizeDeep(alerts, monthShift()), []);
+
   // На главной — только непрочитанные и неудалённые
-  const visibleAlerts = alerts.filter((a) => a.unread && !dismissed.has(a.id));
+  const visibleAlerts = alertsD.filter((a) => a.unread && !dismissed.has(a.id));
 
   return (
     <div className="mx-auto max-w-[1320px] space-y-8">
@@ -406,7 +410,7 @@ export default function DashboardPage() {
       <AllAlertsModal
         open={allAlertsOpen}
         onClose={() => setAllAlertsOpen(false)}
-        alerts={alerts}
+        alerts={alertsD}
         dismissedIds={dismissed}
       />
     </div>

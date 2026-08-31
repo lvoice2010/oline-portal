@@ -31,7 +31,36 @@ import {
   type ReportTone,
   type ServiceReport,
 } from "@/lib/mock-data";
+import {
+  monthShift,
+  demoizeDeep,
+  longDateLabel,
+  shortDateLabel,
+  todayDate,
+  yesterdayDate,
+  currentMonthIndex,
+} from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
+
+// Демо-«сегодня»: сдвигаем все даты в отчёте от реальной даты, а метки
+// «сегодня/вчера» подставляем точной датой.
+function demoizeReport(report: ServiceReport): ServiceReport {
+  const shift = monthShift();
+  const r = demoizeDeep(report, shift);
+  const now = new Date();
+  const y = yesterdayDate(now);
+  const y2 = new Date(now);
+  y2.setDate(now.getDate() - 2);
+  if (r.kpisByPeriod?.today) {
+    r.kpisByPeriod.today.rangeLabel = `Сегодня · ${longDateLabel(todayDate(now))}`;
+    r.kpisByPeriod.today.compareLabel = `к ${shortDateLabel(y)}`;
+  }
+  if (r.kpisByPeriod?.yesterday) {
+    r.kpisByPeriod.yesterday.rangeLabel = `Вчера · ${longDateLabel(y)}`;
+    r.kpisByPeriod.yesterday.compareLabel = `к ${shortDateLabel(y2)}`;
+  }
+  return r;
+}
 
 const NAVY = "#1F5240";
 const SAGE = "#7CB342";
@@ -76,12 +105,16 @@ const PERIOD_OPTIONS: { id: PeriodKey; label: string }[] = [
 
 
 export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
-  const report = serviceReports[serviceId];
+  const rawReport = serviceReports[serviceId];
   const [momMode, setMomMode] = React.useState<"closed" | "mtd">("closed");
   const [period, setPeriod] = React.useState<PeriodKey>("month");
   const [customOpen, setCustomOpen] = React.useState(false);
   const [customFrom, setCustomFrom] = React.useState("2026-04-15");
   const [customTo, setCustomTo] = React.useState("2026-05-15");
+  const report = React.useMemo(
+    () => (rawReport ? demoizeReport(rawReport) : rawReport),
+    [rawReport]
+  );
 
   if (!report) {
     return (
@@ -883,7 +916,16 @@ function KpiFunnel({
 }
 
 const RU_MONTHS = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-const CURRENT_MONTH_IDX = 5; // 20 июня 2026 → текущий (незавершённый) месяц = Июн (индекс 5)
+
+// Сдвигаем заполненное окно так, чтобы «текущий» месяц данных пришёлся на
+// реальный текущий месяц (данные фейковые — окно просто едет вперёд во времени).
+function rotateYearValues<T>(values: (T | null)[], shift: number): (T | null)[] {
+  if (!shift) return values;
+  return values.map((_, j) => {
+    const src = j - shift;
+    return src >= 0 && src < values.length ? values[src] : null;
+  });
+}
 
 function YearlyReportTable({
   yearlyReports,
@@ -892,9 +934,23 @@ function YearlyReportTable({
 }) {
   const years = Object.keys(yearlyReports).sort().reverse();
   const [year, setYear] = React.useState(years[0]);
-  const data = yearlyReports[year];
+  const shift = monthShift();
+  const currentYear = String(new Date().getFullYear());
+  const isCurrent = year === currentYear;
+  const currentMonthIdx = currentMonthIndex(); // реальный текущий месяц
+  const rawData = yearlyReports[year];
+  // Годовую таблицу ротируем только для текущего года; прошлые годы — как есть
+  const data =
+    isCurrent && shift
+      ? {
+          ...rawData,
+          rows: rawData.rows.map((row) => ({
+            ...row,
+            values: rotateYearValues(row.values, shift),
+          })),
+        }
+      : rawData;
   const monthsFilled = data.rows[0]?.values.filter((v) => v !== null).length ?? 12;
-  const isCurrent = year === "2026";
 
   return (
     <Card className="p-5">
@@ -915,7 +971,7 @@ function YearlyReportTable({
               )}
             >
               {y}
-              {y === "2026" && (
+              {y === currentYear && (
                 <span className="ml-1 text-[9px] opacity-70">тек.</span>
               )}
             </button>
@@ -935,7 +991,7 @@ function YearlyReportTable({
                   key={m}
                   className={cn(
                     "pb-1.5 pl-2 pr-1 text-right font-medium",
-                    isCurrent && i === CURRENT_MONTH_IDX && "text-copper"
+                    isCurrent && i === currentMonthIdx && "text-copper"
                   )}
                 >
                   {m}
@@ -956,7 +1012,7 @@ function YearlyReportTable({
                       "py-1.5 pl-2 pr-1 text-right tabular-nums",
                       v === null && "text-navy/25",
                       v !== null && "text-navy/80",
-                      isCurrent && i === CURRENT_MONTH_IDX && "font-semibold text-copper"
+                      isCurrent && i === currentMonthIdx && "font-semibold text-copper"
                     )}
                   >
                     {v === null ? "—" : v}
