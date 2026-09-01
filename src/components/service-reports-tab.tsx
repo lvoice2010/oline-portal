@@ -620,10 +620,16 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
               hint: "в среднем / мес",
             },
             {
-              label: "Рост за год",
-              value: yoyPct === null ? "—" : `${yoyPct >= 0 ? "+" : ""}${yoyPct}%`,
+              // Заголовок зависит от знака: рост / спад / без изменений
+              label:
+                yoyPct === null || yoyPct === 0
+                  ? "Динамика за год"
+                  : yoyPct > 0
+                  ? "Рост за год"
+                  : "Спад за год",
+              value: yoyPct === null ? "—" : `${yoyPct > 0 ? "+" : ""}${yoyPct}%`,
               hint: "за 12 месяцев",
-              tone: yoyPct === null ? undefined : yoyPct >= 0 ? "up" : "down",
+              tone: yoyPct === null || yoyPct === 0 ? undefined : yoyPct > 0 ? "up" : "down",
             },
             {
               label: "Пиковый месяц",
