@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Send, MessageCircle, Phone, CheckCircle2 } from "lucide-react";
+import { Send, Mail, Phone, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { connectedServices } from "@/lib/mock-data";
 
@@ -63,20 +63,18 @@ export default function MessagesPage() {
               </div>
               <div className="mt-4 space-y-2">
                 <a
-                  href={`tel:${manager.phone.replace(/[^+\d]/g, "")}`}
+                  href={`tel:${manager.phone.replace(/[^+\d]/g, "")},7001`}
                   className="flex items-center gap-2 rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm text-navy hover:border-copper hover:text-copper"
                 >
                   <Phone size={14} />
-                  <span className="tabular-nums">{manager.phone}</span>
+                  <span className="tabular-nums">{manager.phone} доб. 7001</span>
                 </a>
                 <a
-                  href={`https://t.me/${manager.telegram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`mailto:${manager.email}`}
                   className="flex items-center gap-2 rounded-lg border border-navy/15 bg-white px-3 py-2 text-sm text-navy hover:border-copper hover:text-copper"
                 >
-                  <MessageCircle size={14} />
-                  <span>@{manager.telegram}</span>
+                  <Mail size={14} />
+                  <span>{manager.email}</span>
                 </a>
               </div>
             </Card>
@@ -114,7 +112,7 @@ export default function MessagesPage() {
                 Сообщение отправлено
               </p>
               <p className="max-w-sm text-sm text-navy/55">
-                Менеджер уведомлён. Ответ придёт в Telegram или на email в
+                Менеджер уведомлён. Ответ придёт на email или по телефону в
                 течение указанного срока.
               </p>
             </div>
