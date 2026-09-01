@@ -4865,7 +4865,7 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // Закрытые месяцы: Май vs Апрель (значения по умолчанию, безопасное сравнение)
     monthOverMonth: [
-      { metric: "Поступившие (зачётные)", prev: "2 048", current: "2 486", delta: "+21%", tone: "up" },
+      { metric: "Поступившие", prev: "2 048", current: "2 486", delta: "+21%", tone: "up" },
       { metric: "Принятые", prev: "1 798 (87.8%)", current: "2 250 (90.5%)", delta: "+25%", tone: "up", indent: true },
       { metric: "Пропущенные", prev: "250 (12.2%)", current: "236 (9.5%)", delta: "−6%", tone: "ok", indent: true },
       { metric: "Короткие сбросы", prev: "96", current: "90", delta: "−6%", tone: "ok" },
@@ -4879,7 +4879,7 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // MTD: Июнь (1–5) vs Май (1–5) — сравнение текущего MTD с тем же окном прошлого месяца
     monthOverMonthMtd: [
-      { metric: "Поступившие (зачётные)", prev: "400", current: "450", delta: "+12.5%", tone: "up" },
+      { metric: "Поступившие", prev: "400", current: "450", delta: "+12.5%", tone: "up" },
       { metric: "Принятые", prev: "365 (91.3%)", current: "410 (91.1%)", delta: "+12.3%", tone: "up", indent: true },
       { metric: "Пропущенные", prev: "35 (8.8%)", current: "40 (8.9%)", delta: "+14%", tone: "warn", indent: true },
       { metric: "Короткие сбросы", prev: "15", current: "17", delta: "+13%", tone: "neutral" },
@@ -5235,7 +5235,7 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // Закрытые месяцы: Май vs Апрель
     monthOverMonth: [
-      { metric: "Поступившие (зачётные)", prev: "1 318", current: "1 435", delta: "+9%", tone: "up" },
+      { metric: "Поступившие", prev: "1 318", current: "1 435", delta: "+9%", tone: "up" },
       { metric: "Принятые", prev: "1 230 (93.3%)", current: "1 362 (94.9%)", delta: "+11%", tone: "up", indent: true },
       { metric: "Пропущенные", prev: "88 (6.7%)", current: "73 (5.1%)", delta: "−17%", tone: "ok", indent: true },
       { metric: "Короткие сбросы", prev: "52", current: "45", delta: "−13%", tone: "ok" },
@@ -5249,7 +5249,7 @@ export const serviceReports: Record<string, ServiceReport> = {
     ],
     // MTD: Июнь (1–5) vs Май (1–5)
     monthOverMonthMtd: [
-      { metric: "Поступившие (зачётные)", prev: "231", current: "250", delta: "+8.2%", tone: "up" },
+      { metric: "Поступившие", prev: "231", current: "250", delta: "+8.2%", tone: "up" },
       { metric: "Принятые", prev: "220 (95.2%)", current: "238 (95.2%)", delta: "+8.2%", tone: "up", indent: true },
       { metric: "Пропущенные", prev: "11 (4.8%)", current: "12 (4.8%)", delta: "+9%", tone: "neutral", indent: true },
       { metric: "Короткие сбросы", prev: "7", current: "8", delta: "+14%", tone: "neutral" },

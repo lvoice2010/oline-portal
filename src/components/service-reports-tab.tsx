@@ -104,6 +104,31 @@ const PERIOD_OPTIONS: { id: PeriodKey; label: string }[] = [
 ];
 
 
+// Смысловая группировка строк отчёта (Месяц-к-месяцу / годовой)
+const MOM_GROUPS: { label: string; metrics: string[] }[] = [
+  {
+    label: "Поток обращений",
+    metrics: ["Поступившие", "Принятые", "Пропущенные", "Короткие сбросы"],
+  },
+  {
+    label: "Качество обслуживания",
+    metrics: [
+      "Service Level",
+      "Среднее время ответа (ASA)",
+      "Среднее время разговора (AHT)",
+      "Длительность разговоров, мин",
+    ],
+  },
+  {
+    label: "Маршрутизация и повторы",
+    metrics: ["Переведённые", "Повторные обращения", "Перезвоны по заявке"],
+  },
+];
+function momGroup(metric: string): string {
+  const g = MOM_GROUPS.find((x) => x.metrics.includes(metric));
+  return g ? g.label : "";
+}
+
 export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   const rawReport = serviceReports[serviceId];
   const [momMode, setMomMode] = React.useState<"closed" | "mtd">("closed");
@@ -459,14 +484,31 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
               </tr>
             </thead>
             <tbody>
-              {(momMode === "mtd" && report.monthOverMonthMtd
-                ? report.monthOverMonthMtd
-                : report.monthOverMonth
-              ).map((r) => (
-                <tr
-                  key={r.metric}
-                  className="border-b border-navy/[0.04] last:border-0"
-                >
+              {(() => {
+                const rows =
+                  momMode === "mtd" && report.monthOverMonthMtd
+                    ? report.monthOverMonthMtd
+                    : report.monthOverMonth;
+                return rows.map((r, i) => {
+                  const group = momGroup(r.metric);
+                  const prevGroup = i > 0 ? momGroup(rows[i - 1].metric) : "";
+                  const showHead = group && group !== prevGroup;
+                  return (
+                    <React.Fragment key={r.metric}>
+                      {showHead && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className={cn(
+                              "pb-1 text-[10px] font-semibold uppercase tracking-wider text-navy/40",
+                              i === 0 ? "pt-0.5" : "pt-3"
+                            )}
+                          >
+                            {group}
+                          </td>
+                        </tr>
+                      )}
+                      <tr className="border-b border-navy/[0.04] last:border-0">
                   {r.indent ? (
                     <td className="py-0 pl-3 text-navy/60">
                       {/* линия-дерево: вертикаль слева объединяет разбивку «Поступивших» */}
@@ -495,8 +537,11 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                       {r.delta}
                     </span>
                   </td>
-                </tr>
-              ))}
+                      </tr>
+                    </React.Fragment>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </Card>
@@ -789,7 +834,7 @@ function KpiFunnel({
               <span className="text-3xl font-semibold tabular-nums text-navy">
                 {incoming.value}
               </span>
-              <span className="text-xs text-navy/55">входящих за период</span>
+              <span className="text-xs text-navy/55">поступивших за период</span>
             </p>
             <p
               className={cn(
