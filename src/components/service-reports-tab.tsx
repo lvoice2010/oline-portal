@@ -108,20 +108,39 @@ const PERIOD_OPTIONS: { id: PeriodKey; label: string }[] = [
 const MOM_GROUPS: { label: string; metrics: string[] }[] = [
   {
     label: "Поток обращений",
-    metrics: ["Поступившие", "Принятые", "Пропущенные", "Короткие сбросы"],
+    metrics: [
+      "Поступившие",
+      "Входящие",
+      "Входящие диалогов",
+      "Принятые",
+      "Пропущенные",
+      "Доля пропущенных",
+      "Короткие сбросы",
+      "Обработано ИИ",
+    ],
   },
   {
     label: "Качество обслуживания",
     metrics: [
       "Service Level",
       "Среднее время ответа (ASA)",
+      "Среднее время ответа",
       "Среднее время разговора (AHT)",
+      "Среднее время разговора",
+      "Среднее время диалога",
       "Длительность разговоров, мин",
     ],
   },
   {
     label: "Маршрутизация и повторы",
-    metrics: ["Переведённые", "Повторные обращения", "Перезвоны по заявке"],
+    metrics: [
+      "Переведённые",
+      "Повторные обращения",
+      "Перезвоны по заявке",
+      "Перезвоны (поступило)",
+      "Эскалаций",
+      "Доля эскалаций",
+    ],
   },
 ];
 function momGroup(metric: string): string {
@@ -500,7 +519,7 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                           <td
                             colSpan={4}
                             className={cn(
-                              "pb-1 text-[10px] font-semibold uppercase tracking-wider text-navy/40",
+                              "pb-1 text-[10px] font-semibold uppercase tracking-wider text-copper",
                               i === 0 ? "pt-0.5" : "pt-3"
                             )}
                           >
@@ -1047,26 +1066,46 @@ function YearlyReportTable({
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row) => (
-              <tr key={row.metric} className="border-b border-navy/[0.04] last:border-0">
-                <td className="sticky left-0 bg-white py-1.5 pr-3 text-navy/75">
-                  {row.metric}
-                </td>
-                {row.values.map((v, i) => (
-                  <td
-                    key={i}
-                    className={cn(
-                      "py-1.5 pl-2 pr-1 text-right tabular-nums",
-                      v === null && "text-navy/25",
-                      v !== null && "text-navy/80",
-                      isCurrent && i === currentMonthIdx && "font-semibold text-copper"
-                    )}
-                  >
-                    {v === null ? "—" : v}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {data.rows.map((row, ri) => {
+              const group = momGroup(row.metric);
+              const prevGroup = ri > 0 ? momGroup(data.rows[ri - 1].metric) : "";
+              const showHead = group && group !== prevGroup;
+              return (
+                <React.Fragment key={row.metric}>
+                  {showHead && (
+                    <tr>
+                      <td
+                        colSpan={RU_MONTHS.length + 1}
+                        className={cn(
+                          "sticky left-0 bg-white pb-1 text-[10px] font-semibold uppercase tracking-wider text-copper",
+                          ri === 0 ? "pt-0.5" : "pt-3"
+                        )}
+                      >
+                        {group}
+                      </td>
+                    </tr>
+                  )}
+                  <tr className="border-b border-navy/[0.04] last:border-0">
+                    <td className="sticky left-0 bg-white py-1.5 pr-3 text-navy/75">
+                      {row.metric}
+                    </td>
+                    {row.values.map((v, i) => (
+                      <td
+                        key={i}
+                        className={cn(
+                          "py-1.5 pl-2 pr-1 text-right tabular-nums",
+                          v === null && "text-navy/25",
+                          v !== null && "text-navy/80",
+                          isCurrent && i === currentMonthIdx && "font-semibold text-copper"
+                        )}
+                      >
+                        {v === null ? "—" : v}
+                      </td>
+                    ))}
+                  </tr>
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
