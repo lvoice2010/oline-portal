@@ -4142,7 +4142,7 @@ export const serviceAnalytics: Record<string, ServiceAnalytics> = {
     },
     benchmarks: {
       industry:
-        "Средние показатели контакт-центров в eCommerce / ритейле — включая собственные КЦ компаний (открытые отраслевые исследования рынка, 2025)",
+        "Средние показатели контакт-центров в eCommerce / ритейле — открытые отраслевые исследования рынка, 2025",
       items: [
         {
           metric: "Скорость ответа",
@@ -4343,7 +4343,7 @@ export const serviceAnalytics: Record<string, ServiceAnalytics> = {
     },
     benchmarks: {
       industry:
-        "Средние показатели B2B контакт-центров — включая собственные КЦ компаний (открытые отраслевые исследования рынка, 2025)",
+        "Средние показатели B2B контакт-центров — открытые отраслевые исследования рынка, 2025",
       items: [
         { metric: "Скорость ответа", unit: "сек", you: 22, median: 48, top10: 18, higherIsBetter: false, tooltip: "Среднее время ответа на звонок" },
         { metric: "Service Level", unit: "%", you: 92, median: 71, top10: 94, higherIsBetter: true, tooltip: "Доля звонков в пределах норматива" },
