@@ -589,8 +589,9 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
           const avgFlow = actual.length
             ? Math.round(actual.reduce((s, p) => s + p.incoming, 0) / actual.length)
             : 0;
-          // «Рост за год» — YTD: накопленный период текущего года (напр. янв–сен)
-          // к тому же периоду прошлого года, по годовой таблице.
+          // «Рост за год» — YTD год к году (накопленный период текущего года к
+          // тому же периоду прошлого). Если прошлого года нет — динамика с начала
+          // текущего года; если данных < 2 месяцев — «недостаточно данных».
           const RU_M = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
           const parseN = (s: string) => Number(String(s).replace(/[^\d]/g, ""));
           let yoyPct: number | null = null;
@@ -606,20 +607,33 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
             );
             const curRow = cur?.rows.find((r) => r.metric === flowName);
             const prevRow = prev?.rows.find((r) => r.metric === flowName);
-            if (curRow && prevRow) {
+            if (curRow) {
               // выравниваем текущий год на реальный текущий месяц (как в таблице)
               const curVals = rotateYearValues(curRow.values, monthShift());
               const idxs = curVals
                 .map((v, i) => (v !== null ? i : -1))
                 .filter((i) => i >= 0);
-              if (idxs.length) {
+              const first = idxs[0];
+              const last = idxs[idxs.length - 1];
+              const prevSum = prevRow
+                ? idxs.reduce(
+                    (s, i) => (prevRow.values[i] != null ? s + parseN(prevRow.values[i] as string) : s),
+                    0
+                  )
+                : 0;
+              if (idxs.length && prevRow && prevSum > 0) {
+                // YTD год к году
                 const curSum = idxs.reduce((s, i) => s + parseN(curVals[i] as string), 0);
-                const prevSum = idxs.reduce(
-                  (s, i) => (prevRow.values[i] != null ? s + parseN(prevRow.values[i] as string) : s),
-                  0
-                );
-                if (prevSum > 0) yoyPct = Math.round(((curSum - prevSum) / prevSum) * 100);
-                yoyLabel = `${RU_M[idxs[0]]}–${RU_M[idxs[idxs.length - 1]]} к прошлому году`;
+                yoyPct = Math.round(((curSum - prevSum) / prevSum) * 100);
+                yoyLabel = `${RU_M[first]}–${RU_M[last]} к прошлому году`;
+              } else if (idxs.length >= 2) {
+                // прошлого года нет — динамика с начала текущего года
+                const a = parseN(curVals[first] as string);
+                const b = parseN(curVals[last] as string);
+                if (a > 0) yoyPct = Math.round(((b - a) / a) * 100);
+                yoyLabel = `${RU_M[first]}–${RU_M[last]} (с начала года)`;
+              } else {
+                yoyLabel = "недостаточно данных";
               }
             }
           }
