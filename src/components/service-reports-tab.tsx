@@ -580,6 +580,67 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
           const labelAnswered = hasAbandoned
             ? "Принятые"
             : "Обработано с помощью ИИ";
+
+          // Итоги за 12 месяцев (для плиток под графиком)
+          const series = report.monthlyDynamics12;
+          const actual = series.filter(
+            (p) => typeof p.incoming === "number"
+          ) as { month: string; incoming: number }[];
+          const avgFlow = actual.length
+            ? Math.round(actual.reduce((s, p) => s + p.incoming, 0) / actual.length)
+            : 0;
+          const firstFlow = actual[0]?.incoming;
+          const lastFlow = actual[actual.length - 1]?.incoming;
+          const yoyPct =
+            firstFlow && lastFlow
+              ? Math.round(((lastFlow - firstFlow) / firstFlow) * 100)
+              : null;
+          const peak = actual.reduce(
+            (b, p) => (p.incoming > b.incoming ? p : b),
+            actual[0] ?? { month: "—", incoming: 0 }
+          );
+          const peakPct = avgFlow
+            ? Math.round(((peak.incoming - avgFlow) / avgFlow) * 100)
+            : 0;
+          const nextForecast = series.find(
+            (p) =>
+              typeof p.incoming !== "number" &&
+              typeof p.forecastIncoming === "number"
+          ) as { month: string; forecastIncoming: number } | undefined;
+          const summaryTiles: {
+            label: string;
+            value: string;
+            hint: string;
+            tone?: "up" | "down";
+            accent?: boolean;
+          }[] = [
+            {
+              label: "Среднемес. поток",
+              value: avgFlow.toLocaleString("ru-RU"),
+              hint: "в среднем / мес",
+            },
+            {
+              label: "Рост за год",
+              value: yoyPct === null ? "—" : `${yoyPct >= 0 ? "+" : ""}${yoyPct}%`,
+              hint: "за 12 месяцев",
+              tone: yoyPct === null ? undefined : yoyPct >= 0 ? "up" : "down",
+            },
+            {
+              label: "Пиковый месяц",
+              value: peak.month,
+              hint: `${peakPct >= 0 ? "+" : ""}${peakPct}% к среднему`,
+            },
+            ...(nextForecast
+              ? [
+                  {
+                    label: "Прогноз, след. мес",
+                    value: nextForecast.forecastIncoming.toLocaleString("ru-RU"),
+                    hint: nextForecast.month,
+                    accent: true,
+                  },
+                ]
+              : []),
+          ];
           return (
           <Card className="p-5">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -693,6 +754,49 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
               <span className="inline-flex items-center gap-1 text-navy/45">
                 ─ ─ прогноз
               </span>
+            </div>
+
+            {/* Итоги за 12 месяцев — заполняют место под графиком */}
+            <div className="mt-4 border-t border-navy/[0.06] pt-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-copper">
+                Итоги за 12 месяцев
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {summaryTiles.map((t) => (
+                  <div
+                    key={t.label}
+                    className={cn(
+                      "rounded-card border p-3",
+                      t.accent
+                        ? "border-sky-200 bg-sky-50/50"
+                        : "border-navy/[0.08] bg-navy-50/40"
+                    )}
+                  >
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-navy/55">
+                      {t.label}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-1 text-lg font-semibold tabular-nums",
+                        t.tone === "up"
+                          ? "text-emerald-600"
+                          : t.tone === "down"
+                          ? "text-rose-600"
+                          : "text-navy"
+                      )}
+                    >
+                      {t.value}
+                    </p>
+                    <p className="text-[11px] text-navy/55">{t.hint}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-navy/55">
+                Пик нагрузки — <span className="font-medium text-navy/75">{peak.month}</span>{" "}
+                ({peakPct >= 0 ? "+" : ""}
+                {peakPct}% к среднему). Средний поток ~{avgFlow.toLocaleString("ru-RU")} обращений/мес
+                {yoyPct !== null && `, динамика за год ${yoyPct >= 0 ? "+" : ""}${yoyPct}%`}.
+              </p>
             </div>
           </Card>
           );
