@@ -791,12 +791,6 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-[11px] leading-relaxed text-navy/55">
-                Пик нагрузки — <span className="font-medium text-navy/75">{peak.month}</span>{" "}
-                ({peakPct >= 0 ? "+" : ""}
-                {peakPct}% к среднему). Средний поток ~{avgFlow.toLocaleString("ru-RU")} обращений/мес
-                {yoyPct !== null && `, динамика за год ${yoyPct >= 0 ? "+" : ""}${yoyPct}%`}.
-              </p>
             </div>
           </Card>
           );
