@@ -490,7 +490,9 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
                     )}
                   >
                     <span className="inline-flex items-center gap-0.5">
-                      <DeltaIcon tone={r.tone} size={10} /> {r.delta}
+                      {/* нейтральный «−» не рисуем — значение уже со своим знаком */}
+                      {r.tone !== "neutral" && <DeltaIcon tone={r.tone} size={10} />}
+                      {r.delta}
                     </span>
                   </td>
                 </tr>
