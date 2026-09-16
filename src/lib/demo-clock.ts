@@ -145,3 +145,4 @@ export function yesterdayDate(now: Date = new Date()): Date {
 
 export const RU_SHORT_MONTHS = SHORT;
 export const RU_NOM_MONTHS = NOM;
+export const RU_DAT_MONTHS = DAT;

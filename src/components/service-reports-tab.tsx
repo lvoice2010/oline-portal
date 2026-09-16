@@ -40,6 +40,7 @@ import {
   yesterdayDate,
   currentMonthIndex,
   RU_NOM_MONTHS,
+  RU_DAT_MONTHS,
 } from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
@@ -75,6 +76,7 @@ function demoizeReport(report: ServiceReport): ServiceReport {
   r.kpisCurrentMonthLabel = monthYearMtd;
   if (r.kpisByPeriod?.month) {
     r.kpisByPeriod.month.rangeLabel = monthYearMtd;
+    r.kpisByPeriod.month.compareLabel = `к ${RU_DAT_MONTHS[(mIdx + 11) % 12]} 1–${dayN}`;
   }
   if (r.kpisByPeriod?.week) {
     const ws = new Date(now);
