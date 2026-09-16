@@ -39,6 +39,7 @@ import {
   todayDate,
   yesterdayDate,
   currentMonthIndex,
+  RU_NOM_MONTHS,
 } from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
@@ -58,6 +59,27 @@ function demoizeReport(report: ServiceReport): ServiceReport {
   if (r.kpisByPeriod?.yesterday) {
     r.kpisByPeriod.yesterday.rangeLabel = `Вчера · ${longDateLabel(y)}`;
     r.kpisByPeriod.yesterday.compareLabel = `к ${shortDateLabel(y2)}`;
+  }
+
+  // День берём от реальной даты: окно текущего месяца (MTD «с 1 по N»),
+  // MTD-сравнение и «Неделя» — чтобы демо не «прилипало» к 4-му числу.
+  const dayN = now.getDate();
+  const mIdx = now.getMonth();
+  const yr = now.getFullYear();
+  const monthNom = RU_NOM_MONTHS[mIdx];
+  const prevMonthNom = RU_NOM_MONTHS[(mIdx + 11) % 12];
+  const monthYearMtd = `${monthNom} ${yr} (с 1 по ${dayN})`;
+  r.mtdDayCount = dayN;
+  r.mtdCurrentLabel = `${monthNom} (1–${dayN})`;
+  r.mtdPreviousLabel = `${prevMonthNom} (1–${dayN})`;
+  r.kpisCurrentMonthLabel = monthYearMtd;
+  if (r.kpisByPeriod?.month) {
+    r.kpisByPeriod.month.rangeLabel = monthYearMtd;
+  }
+  if (r.kpisByPeriod?.week) {
+    const ws = new Date(now);
+    ws.setDate(dayN - 6);
+    r.kpisByPeriod.week.rangeLabel = `Неделя · ${shortDateLabel(ws)} – ${shortDateLabel(now)}`;
   }
   return r;
 }
