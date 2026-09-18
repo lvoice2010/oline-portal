@@ -41,7 +41,7 @@ import {
   currentMonthIndex,
   RU_NOM_MONTHS,
   RU_DAT_MONTHS,
-  shiftCallDate,
+  shiftCallsToNow,
 } from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
@@ -922,9 +922,7 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
         />
       ) : (
         <AiTopicsBreakdown
-          items={calls
-            .filter((c) => c.serviceId === serviceId)
-            .map((c) => ({ ...c, date: shiftCallDate(c.date, monthShift()) }))}
+          items={shiftCallsToNow(calls.filter((c) => c.serviceId === serviceId))}
           itemNoun="звонков"
           getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}

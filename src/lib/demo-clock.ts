@@ -147,14 +147,37 @@ export const RU_SHORT_MONTHS = SHORT;
 export const RU_NOM_MONTHS = NOM;
 export const RU_DAT_MONTHS = DAT;
 
-/** Сдвиг даты вызова формата «dd.mm.yyyy» на shift месяцев вперёд (с переносом года). */
-export function shiftCallDate(dstr: string, shift: number = monthShift()): string {
-  if (!shift || !dstr) return dstr;
-  const p = dstr.split(".").map(Number);
-  if (p.length < 3 || p.some((n) => Number.isNaN(n))) return dstr;
-  const [d, m, y] = p;
-  const dt = new Date(y, m - 1 + shift, d);
-  const dd = String(dt.getDate()).padStart(2, "0");
-  const mm = String(dt.getMonth() + 1).padStart(2, "0");
-  return `${dd}.${mm}.${dt.getFullYear()}`;
+function parseDmy(s: string): Date | null {
+  const p = s.split(".").map(Number);
+  if (p.length < 3 || p.some((n) => Number.isNaN(n))) return null;
+  return new Date(p[2], p[1] - 1, p[0]);
+}
+function fmtDmy(dt: Date): string {
+  return `${String(dt.getDate()).padStart(2, "0")}.${String(dt.getMonth() + 1).padStart(2, "0")}.${dt.getFullYear()}`;
+}
+
+/**
+ * Демо-«сегодня» для журнала звонков: сдвигаем все даты на целое число дней так,
+ * чтобы самый свежий звонок пришёлся на сегодня, а остальные — на недавние дни.
+ * Журнал всегда актуален независимо от даты авторинга данных.
+ */
+export function shiftCallsToNow<T extends { date: string }>(
+  list: T[],
+  now: Date = new Date()
+): T[] {
+  if (!list.length) return list;
+  let maxT = -Infinity;
+  for (const c of list) {
+    const dt = parseDmy(c.date);
+    if (dt && dt.getTime() > maxT) maxT = dt.getTime();
+  }
+  if (maxT === -Infinity) return list;
+  const offsetDays = Math.floor((now.getTime() - maxT) / 86400000);
+  if (offsetDays <= 0) return list;
+  return list.map((c) => {
+    const dt = parseDmy(c.date);
+    if (!dt) return c;
+    dt.setDate(dt.getDate() + offsetDays);
+    return { ...c, date: fmtDmy(dt) };
+  });
 }

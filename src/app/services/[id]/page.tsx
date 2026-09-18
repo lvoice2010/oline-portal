@@ -25,7 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { shiftDateString, monthShift, shiftCallDate } from "@/lib/demo-clock";
+import { shiftDateString, monthShift, shiftCallsToNow } from "@/lib/demo-clock";
 import {
   connectedServices,
   calls,
@@ -557,12 +557,10 @@ function CallsTab({ serviceId }: { serviceId: string }) {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Call | null>(null);
 
-  // Демо-«сегодня»: сдвигаем даты звонков от реальной даты, чтобы журнал
-  // показывал вызовы за текущий период, а не за месяц авторинга.
-  const callShift = monthShift();
-  const serviceCalls = calls
-    .filter((c) => c.serviceId === serviceId)
-    .map((c) => ({ ...c, date: shiftCallDate(c.date, callShift) }));
+  // Демо-«сегодня»: сдвигаем журнал так, чтобы свежий звонок пришёлся на сегодня.
+  const serviceCalls = shiftCallsToNow(
+    calls.filter((c) => c.serviceId === serviceId)
+  );
   const now = new Date();
   const days = period === "today" ? 1 : period === "week" ? 7 : period === "month" ? 31 : null;
   const cutoff = days !== null ? new Date(now.getTime() - days * 86400000) : null;
