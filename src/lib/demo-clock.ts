@@ -146,3 +146,15 @@ export function yesterdayDate(now: Date = new Date()): Date {
 export const RU_SHORT_MONTHS = SHORT;
 export const RU_NOM_MONTHS = NOM;
 export const RU_DAT_MONTHS = DAT;
+
+/** Сдвиг даты вызова формата «dd.mm.yyyy» на shift месяцев вперёд (с переносом года). */
+export function shiftCallDate(dstr: string, shift: number = monthShift()): string {
+  if (!shift || !dstr) return dstr;
+  const p = dstr.split(".").map(Number);
+  if (p.length < 3 || p.some((n) => Number.isNaN(n))) return dstr;
+  const [d, m, y] = p;
+  const dt = new Date(y, m - 1 + shift, d);
+  const dd = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  return `${dd}.${mm}.${dt.getFullYear()}`;
+}

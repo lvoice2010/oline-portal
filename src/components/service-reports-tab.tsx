@@ -41,6 +41,7 @@ import {
   currentMonthIndex,
   RU_NOM_MONTHS,
   RU_DAT_MONTHS,
+  shiftCallDate,
 } from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
@@ -70,13 +71,36 @@ function demoizeReport(report: ServiceReport): ServiceReport {
   const monthNom = RU_NOM_MONTHS[mIdx];
   const prevMonthNom = RU_NOM_MONTHS[(mIdx + 11) % 12];
   const monthYearMtd = `${monthNom} ${yr} (с 1 по ${dayN})`;
+  const mtdOrig = r.mtdDayCount || 4; // исходное окно данных «Месяц» (обычно 4 дня)
   r.mtdDayCount = dayN;
   r.mtdCurrentLabel = `${monthNom} (1–${dayN})`;
   r.mtdPreviousLabel = `${prevMonthNom} (1–${dayN})`;
   r.kpisCurrentMonthLabel = monthYearMtd;
   if (r.kpisByPeriod?.month) {
-    r.kpisByPeriod.month.rangeLabel = monthYearMtd;
-    r.kpisByPeriod.month.compareLabel = `к ${RU_DAT_MONTHS[(mIdx + 11) % 12]} 1–${dayN}`;
+    const mo = r.kpisByPeriod.month;
+    mo.rangeLabel = monthYearMtd;
+    mo.compareLabel = `к ${RU_DAT_MONTHS[(mIdx + 11) % 12]} 1–${dayN}`;
+    // «Месяц» авторился как срез за ~4 дня — масштабируем счётные показатели
+    // под реальное число прошедших дней, чтобы месяц не был меньше недели.
+    const k = mtdOrig > 0 ? dayN / mtdOrig : 1;
+    if (k !== 1) {
+      const COUNT = new Set(["Входящие", "Принято", "Пропущено"]);
+      mo.kpis = mo.kpis.map((kpi) =>
+        COUNT.has(kpi.label)
+          ? { ...kpi, value: Math.round(parseNum(kpi.value) * k).toLocaleString("ru-RU") }
+          : kpi
+      );
+      if (mo.transfers) {
+        mo.transfers = {
+          ...mo.transfers,
+          total: Math.round(mo.transfers.total * k),
+          destinations: mo.transfers.destinations.map((dn) => ({
+            ...dn,
+            count: Math.round(dn.count * k),
+          })),
+        };
+      }
+    }
   }
   if (r.kpisByPeriod?.week) {
     const ws = new Date(now);
@@ -898,7 +922,9 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
         />
       ) : (
         <AiTopicsBreakdown
-          items={calls.filter((c) => c.serviceId === serviceId)}
+          items={calls
+            .filter((c) => c.serviceId === serviceId)
+            .map((c) => ({ ...c, date: shiftCallDate(c.date, monthShift()) }))}
           itemNoun="звонков"
           getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}
