@@ -47,7 +47,7 @@ import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
 
 // Демо-«сегодня»: сдвигаем все даты в отчёте от реальной даты, а метки
 // «сегодня/вчера» подставляем точной датой.
-function demoizeReport(report: ServiceReport): ServiceReport {
+export function demoizeReport(report: ServiceReport): ServiceReport {
   const shift = monthShift();
   const r = demoizeDeep(report, shift);
   const now = new Date();

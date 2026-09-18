@@ -31,6 +31,7 @@ import {
   calls,
   dialogs,
   archivedReports,
+  serviceReports,
   DIALOG_CHANNEL_LABEL,
   type Call,
   type CallStatus,
@@ -40,7 +41,7 @@ import {
 import { CallDetailModal } from "@/components/call-detail-modal";
 import { DialogDetailModal } from "@/components/dialog-detail-modal";
 import { StubPage } from "@/components/stub-page";
-import { ServiceReportsTab } from "@/components/service-reports-tab";
+import { ServiceReportsTab, demoizeReport } from "@/components/service-reports-tab";
 import { ServiceAnalyticsTab } from "@/components/service-analytics-tab";
 import { QuarterlyReportTab } from "@/components/quarterly-report-tab";
 import { OutboundReportTab } from "@/components/outbound-report-tab";
@@ -593,12 +594,21 @@ function CallsTab({ serviceId }: { serviceId: string }) {
     return true;
   });
 
-  // Сводка считается по периоду — не по статусу/поиску,
-  // иначе фильтр «Принятые» дал бы «Пропущенных: 0» и т.п.
-  const total = inPeriod.length;
-  const answered = inPeriod.filter((c) => c.status === "answered").length;
-  const missed = inPeriod.filter((c) => c.status === "missed").length;
-  const callback = inPeriod.filter((c) => c.status === "callback").length;
+  // Сводные плитки берём из тех же агрегатов, что и отчёт (за тот же период),
+  // чтобы «Всего вызовов» совпадало с воронкой в отчёте. Таблица ниже —
+  // представительная выборка последних вызовов (полный журнал — в проде).
+  const dReport = serviceReports[serviceId] ? demoizeReport(serviceReports[serviceId]) : null;
+  const snap = dReport?.kpisByPeriod?.[period as keyof NonNullable<typeof dReport.kpisByPeriod>];
+  const kv = (label: string): number | null => {
+    const s = snap?.kpis.find((k) => k.label === label)?.value;
+    return s ? Number(s.replace(/[^\d]/g, "")) : null;
+  };
+  const total = kv("Входящие") ?? inPeriod.length;
+  const answered = kv("Принято") ?? inPeriod.filter((c) => c.status === "answered").length;
+  const missed = kv("Пропущено") ?? inPeriod.filter((c) => c.status === "missed").length;
+  const callback =
+    snap?.callbacks?.total ?? dReport?.callbacks?.total ?? inPeriod.filter((c) => c.status === "callback").length;
+  const fmtN = (n: number) => n.toLocaleString("ru-RU");
 
   // Журнал вообще не накоплен (нет вызовов ни в одном периоде по этой услуге)
   if (serviceCalls.length === 0) {
@@ -614,11 +624,11 @@ function CallsTab({ serviceId }: { serviceId: string }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs text-navy/55">Всего вызовов</p>
-          <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
+          <p className="mt-1 text-2xl font-semibold text-navy tabular-nums">{fmtN(total)}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Принятых</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-600">{answered}</p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-600 tabular-nums">{fmtN(answered)}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Пропущенных</p>
@@ -628,18 +638,18 @@ function CallsTab({ serviceId }: { serviceId: string }) {
               missed > 0 ? "text-rose-600" : "text-navy"
             )}
           >
-            {missed}
+            {fmtN(missed)}
           </p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Перезвонов</p>
           <p
             className={cn(
-              "mt-1 text-2xl font-semibold",
+              "mt-1 text-2xl font-semibold tabular-nums",
               callback > 0 ? "text-amber-600" : "text-navy"
             )}
           >
-            {callback}
+            {fmtN(callback)}
           </p>
         </Card>
       </div>
@@ -767,6 +777,13 @@ function CallsTab({ serviceId }: { serviceId: string }) {
             className="w-64 rounded-xl border border-navy/15 bg-white py-2 pl-9 pr-3 text-sm text-navy outline-none focus:border-copper"
           />
         </div>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-sm font-medium text-navy">Журнал вызовов</p>
+        <p className="text-[11px] text-navy/45">
+          Показаны последние {filtered.length} вызовов за период
+        </p>
       </div>
 
       <Card className="overflow-hidden">
