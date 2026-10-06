@@ -102,6 +102,113 @@ export function demoizeReport(report: ServiceReport): ServiceReport {
       }
     }
   }
+  // «Месяц к месяцу» в режиме «с 1 по N»: приводим текущий период к тем же
+  // «Входящим», что в плитках, прошлый — тем же коэффициентом (Δ сохраняется).
+  const moIn = r.kpisByPeriod?.month?.kpis.find((x) => x.label === "Входящие")?.value;
+  const mtdFlow = r.monthOverMonthMtd?.find((x) => x.metric === "Поступившие" || x.metric === "Входящие");
+  if (r.monthOverMonthMtd && moIn && mtdFlow && parseNum(mtdFlow.current) > 0) {
+    const ratio = parseNum(moIn) / parseNum(mtdFlow.current);
+    // «238 (95.2%)» → масштабируем ведущее число, хвост с процентом оставляем
+    const scale = (s: string) => {
+      const m = s.match(/^([\d\s ]+)(\s*\(.*\))?$/);
+      return m ? `${Math.round(parseNum(m[1]) * ratio).toLocaleString("ru-RU")}${m[2] ?? ""}` : s;
+    };
+    const inNow = parseNum(moIn);
+    const exact: Record<string, string | undefined> = {
+      "Принятые": r.kpisByPeriod?.month?.kpis.find((x) => x.label === "Принято")?.value,
+      "Пропущенные": r.kpisByPeriod?.month?.kpis.find((x) => x.label === "Пропущено")?.value,
+    };
+    r.monthOverMonthMtd = r.monthOverMonthMtd.map((row) => {
+      const prev = scale(row.prev);
+      const ex = exact[row.metric];
+      if (!ex) return { ...row, current: scale(row.current), prev };
+      // Принятые/Пропущенные — ровно как в плитках, % от Поступивших
+      const n = parseNum(ex);
+      const pct = inNow > 0 ? ((n / inNow) * 100).toFixed(1) : "0.0";
+      const p = parseNum(prev.split("(")[0]);
+      const d = p > 0 ? ((n - p) / p) * 100 : 0;
+      const sign = d > 0 ? "+" : d < 0 ? "−" : "";
+      return {
+        ...row,
+        current: `${n.toLocaleString("ru-RU")} (${pct}%)`,
+        prev,
+        delta: `${sign}${Math.abs(d).toFixed(1)}%`,
+      };
+    });
+  }
+
+  // Годовая таблица: текущий (незакрытый) месяц = те же MTD-агрегаты, что в
+  // плитках «Месяц», чтобы цифры совпадали. Прочие счётные строки
+  // масштабируем пропорционально потоку; проценты/время/SL не трогаем.
+  const anchorYear = r.yearlyReports?.["2026"];
+  const moK = r.kpisByPeriod?.month?.kpis;
+  if (anchorYear && moK) {
+    const kv = (label: string) => {
+      const v = moK.find((x) => x.label === label)?.value;
+      return v ? parseNum(v) : null;
+    };
+    const direct: Record<string, number | null> = {
+      "Поступившие": kv("Входящие"),
+      "Входящие": kv("Входящие"),
+      "Входящие диалогов": kv("Входящие"),
+      "Принятые": kv("Принято"),
+      "Пропущенные": kv("Пропущено"),
+    };
+    const AM = 5; // индекс «текущего» месяца в исходных данных (июнь)
+    const flowRow = anchorYear.rows.find((x) =>
+      ["Поступившие", "Входящие", "Входящие диалогов"].includes(x.metric)
+    );
+    const oldFlow = flowRow?.values[AM] != null ? parseNum(String(flowRow.values[AM])) : 0;
+    const newFlow = direct[flowRow?.metric ?? ""] ?? null;
+    if (flowRow && oldFlow > 0 && newFlow !== null) {
+      const ratio = newFlow / oldFlow;
+      r.yearlyReports = {
+        ...r.yearlyReports,
+        "2026": {
+          ...anchorYear,
+          rows: anchorYear.rows.map((row) => {
+            const v = row.values[AM];
+            if (v == null) return row;
+            const s = String(v);
+            let nv: string = s;
+            if (direct[row.metric] != null) nv = direct[row.metric]!.toLocaleString("ru-RU");
+            else if (/^[\d\s ]+$/.test(s)) nv = Math.round(parseNum(s) * ratio).toLocaleString("ru-RU");
+            const values = [...row.values];
+            values[AM] = nv as (typeof row.values)[number];
+            return { ...row, values };
+          }),
+        },
+      };
+    }
+  }
+  // Вывод по текущему году: «за первые N дней принято X» — от реального дня
+  // месяца и тех же «Принято», что в плитках «Месяц»
+  const curYear = r.yearlyReports?.["2026"];
+  // число берём из той же ячейки годовой таблицы (Принятые / Обработано ИИ)
+  const curRowVal = (m: string) => {
+    const v = curYear?.rows.find((x) => x.metric === m)?.values[5];
+    return v != null ? String(v) : undefined;
+  };
+  const acceptedMtd =
+    curRowVal("Принятые") ??
+    curRowVal("Обработано ИИ") ??
+    r.kpisByPeriod?.month?.kpis.find((x) => x.label === "Принято")?.value;
+  if (curYear?.insight && acceptedMtd) {
+    const n10 = dayN % 10;
+    const n100 = dayN % 100;
+    const dn =
+      n10 === 1 && n100 !== 11 ? "день" : n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? "дня" : "дней";
+    r.yearlyReports = {
+      ...r.yearlyReports,
+      "2026": {
+        ...curYear,
+        insight: curYear.insight.replace(
+          /за первые \d+ (?:день|дня|дней)( принято| — ещё) \d+(?:[\s ]\d{3})*/,
+          `за первые ${dayN} ${dn}$1 ${parseNum(acceptedMtd).toLocaleString("ru-RU")}`
+        ),
+      },
+    };
+  }
   if (r.kpisByPeriod?.week) {
     const ws = new Date(now);
     ws.setDate(dayN - 6);
@@ -222,6 +329,12 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
   // Для нейроассистента темы считаются по диалогам, для голосовых линий — по звонкам.
   // Фильтрация по периоду живёт прямо в JSX-блоке ниже (разные типы — разные ветки).
   const isChatbot = serviceId === "chatbot";
+  // Итоги для «Тем обращений» — принятые за период из тех же агрегатов, что и плитки
+  const topicTotals: Partial<Record<"today" | "yesterday" | "week" | "month", number>> = {};
+  for (const p of ["today", "yesterday", "week", "month"] as const) {
+    const v = report.kpisByPeriod?.[p]?.kpis.find((k) => k.label === "Принято")?.value;
+    if (v) topicTotals[p] = parseNum(v);
+  }
 
   return (
     <div className="space-y-6">
@@ -658,8 +771,9 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
             if (curRow) {
               // выравниваем текущий год на реальный текущий месяц (как в таблице)
               const curVals = rotateYearValues(curRow.values, monthShift());
+              // только закрытые месяцы: текущий (с 1 по N) исказил бы сравнение
               const idxs = curVals
-                .map((v, i) => (v !== null ? i : -1))
+                .map((v, i) => (v !== null && i !== currentMonthIndex() ? i : -1))
                 .filter((i) => i >= 0);
               const first = idxs[0];
               const last = idxs[idxs.length - 1];
@@ -919,14 +1033,16 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
           getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}
           getSubcategory={(it) => it.ai?.subcategory}
+          periodTotals={topicTotals}
         />
       ) : (
         <AiTopicsBreakdown
           items={shiftCallsToNow(calls.filter((c) => c.serviceId === serviceId))}
-          itemNoun="звонков"
+          itemNoun="принятых звонков"
           getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}
           getSubcategory={(it) => it.ai?.subcategory}
+          periodTotals={topicTotals}
         />
       )}
 

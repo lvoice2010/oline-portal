@@ -69,6 +69,29 @@ function groupByKey<T>(
     .sort((a, b) => b.count - a.count);
 }
 
+// Приводит количества к итогу total, сохраняя доли (метод наибольших
+// остатков — сумма строк ровно равна total).
+function scaleCounts(rows: TopicCount[], total: number): TopicCount[] {
+  const sum = rows.reduce((s, r) => s + r.count, 0);
+  if (sum === 0 || sum === total) return rows;
+  const raw = rows.map((r) => (r.count / sum) * total);
+  const out = raw.map((x) => Math.floor(x));
+  let rest = total - out.reduce((s, x) => s + x, 0);
+  raw
+    .map((x, i) => ({ i, f: x - Math.floor(x) }))
+    .sort((a, b) => b.f - a.f)
+    .forEach(({ i }) => {
+      if (rest > 0) {
+        out[i]++;
+        rest--;
+      }
+    });
+  return rows
+    .map((r, i) => ({ ...r, count: out[i], pct: total > 0 ? (out[i] / total) * 100 : 0 }))
+    .filter((r) => r.count > 0)
+    .sort((a, b) => b.count - a.count);
+}
+
 // Универсальный блок «Темы обращений» — работает и для звонков,
 // и для диалогов нейроассистента, лишь бы у элементов был
 // ai.category / ai.subcategory. Воспроизводит вид служебного
@@ -83,12 +106,17 @@ export function AiTopicsBreakdown<T>({
   getDate,
   getCategory,
   getSubcategory,
+  periodTotals,
 }: {
   items: T[];
   itemNoun: string; // "карточек" / "звонков" / "диалогов"
   getDate: (it: T) => string; // «DD.MM.YYYY»
   getCategory: (it: T) => string | undefined;
   getSubcategory: (it: T) => string | undefined;
+  // Демо: итог за период из агрегатов отчёта (принятые звонки). Выборка
+  // карточек задаёт только распределение по темам, количества приводятся
+  // к этому итогу — чтобы «Всего» совпадало с плитками KPI.
+  periodTotals?: Partial<Record<Period, number>>;
 }) {
   const [period, setPeriod] = React.useState<Period>("month");
   const [customFrom, setCustomFrom] = React.useState("");
@@ -109,14 +137,25 @@ export function AiTopicsBreakdown<T>({
     }),
     [inPeriod, getCategory]
   );
-  const total = withAi.length;
+  const allWithAi = React.useMemo(
+    () =>
+      items.filter((it) => {
+        const c = getCategory(it);
+        return !!c && c !== "Без диалога";
+      }),
+    [items, getCategory]
+  );
+  const target = periodTotals?.[period];
+  // Выборка для распределения: карточки периода, а если их нет — все
+  const sample = target !== undefined && withAi.length === 0 ? allWithAi : withAi;
+  const total = target ?? withAi.length;
   const cats = React.useMemo(
-    () => groupByKey(withAi, getCategory, total),
-    [withAi, getCategory, total]
+    () => scaleCounts(groupByKey(sample, getCategory, sample.length), total),
+    [sample, getCategory, total]
   );
   const subs = React.useMemo(
-    () => groupByKey(withAi, getSubcategory, total),
-    [withAi, getSubcategory, total]
+    () => scaleCounts(groupByKey(sample, getSubcategory, sample.length), total),
+    [sample, getSubcategory, total]
   );
 
   return (

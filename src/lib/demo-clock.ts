@@ -43,7 +43,8 @@ export function shiftMonthIndex(monthIdx: number, shift: number): number {
 const ALL_WORDS = Array.from(new Set(FORMS.flat())).sort((a, b) => b.length - a.length);
 const MONTH_RE = new RegExp(
   `(^|[^А-Яа-яЁё])(${ALL_WORDS.join("|")})(\\s+(?:20\\d\\d|\\d{2}))?(?![А-Яа-яЁё])`,
-  "g"
+  // «i»: именительный падеж бывает и со строчной («июнь ещё идёт»)
+  "gi"
 );
 // Даты формата dd.mm (например «14.05»)
 const DDMM_RE = /\b([0-3]?\d)\.(0[1-9]|1[0-2])\b/g;
