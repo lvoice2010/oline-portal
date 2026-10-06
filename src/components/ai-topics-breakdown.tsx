@@ -101,8 +101,12 @@ export function AiTopicsBreakdown<T>({
       items.filter((it) => isInPeriod(getDate(it), period, customFrom, customTo)),
     [items, period, customFrom, customTo, getDate]
   );
+  // «Без диалога» (пропущенные/без разговора) — не тема обращения, исключаем
   const withAi = React.useMemo(
-    () => inPeriod.filter((it) => !!getCategory(it)),
+    () => inPeriod.filter((it) => {
+      const c = getCategory(it);
+      return !!c && c !== "Без диалога";
+    }),
     [inPeriod, getCategory]
   );
   const total = withAi.length;
