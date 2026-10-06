@@ -25,7 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { shiftDateString, monthShift, shiftCallsToNow } from "@/lib/demo-clock";
+import { shiftDateString, monthShift } from "@/lib/demo-clock";
 import {
   connectedServices,
   calls,
@@ -549,6 +549,67 @@ const CALL_PERIODS = [
 ] as const;
 type CallPeriod = (typeof CALL_PERIODS)[number]["id"];
 
+const JOURNAL_PHONES = [
+  "+7 (916) 311-44-58", "+7 (905) 822-19-30", "+7 (964) 200-33-77",
+  "+7 (903) 412-66-21", "+7 (915) 800-11-44", "+7 (921) 555-12-90",
+  "+7 (985) 622-33-88", "+7 (909) 100-88-77", "+7 (903) 718-22-44",
+  "+7 (964) 332-11-90", "+7 (999) 214-55-01", "+7 (926) 707-63-12",
+];
+
+// Демо-журнал вызовов: строим полноценную ленту за последние ~30 дней на основе
+// реальных демо-записей услуги (операторы, темы, стенограммы, AI-карточки).
+// У каждого принятого звонка есть стенограмма; у пропущенных её нет (разговора не было).
+function buildDemoJournal(pool: Call[], now: Date): Call[] {
+  if (pool.length === 0) return pool;
+  const base = pool.filter((c) => c.transcript && c.ai);
+  const tmpls = base.length ? base : pool;
+  const operators = Array.from(new Map(pool.map((c) => [c.operator.id, c.operator])).values());
+  const topics = Array.from(new Set(pool.map((c) => c.topic).filter(Boolean))) as string[];
+  const queue = pool[0].queue;
+  const out: Call[] = [];
+  let s = 0;
+  for (let d = 0; d <= 31; d++) {
+    const perDay = d === 0 ? 3 : d === 1 ? 3 : d <= 6 ? 2 : 1;
+    for (let j = 0; j < perDay; j++, s++) {
+      const dt = new Date(now);
+      dt.setDate(now.getDate() - d);
+      const hh = String(9 + ((j * 3 + (s % 2)) % 9)).padStart(2, "0");
+      const mm = String((s * 17) % 60).padStart(2, "0");
+      const ss = String((s * 29) % 60).padStart(2, "0");
+      const roll = (s * 13) % 100;
+      const status: CallStatus = roll < 82 ? "answered" : roll < 93 ? "missed" : "callback";
+      const answered = status !== "missed";
+      const t = tmpls[s % tmpls.length];
+      out.push({
+        ...t,
+        id: `gen-${pool[0].serviceId}-${s}`,
+        uid: `gen.${1777000000 + s * 137}.${s}`,
+        date: `${String(dt.getDate()).padStart(2, "0")}.${String(dt.getMonth() + 1).padStart(2, "0")}.${dt.getFullYear()}`,
+        time: `${hh}:${mm}:${ss}`,
+        operator: operators[s % operators.length],
+        queue,
+        caller: JOURNAL_PHONES[s % JOURNAL_PHONES.length],
+        status,
+        waitSec: status === "missed" ? 20 + ((s * 7) % 30) : 3 + ((s * 5) % 12),
+        durationSec: answered ? 45 + ((s * 37) % 210) : 0,
+        holdSec: 0,
+        hasRecording: answered,
+        hasTranscript: answered,
+        transcript: answered ? t.transcript : undefined,
+        ai: answered ? t.ai : undefined,
+        topic: status === "missed" ? undefined : topics[s % topics.length] ?? t.topic,
+        reviewed: answered && s % 3 !== 0,
+        dropped: false,
+        rating: answered ? [100, 80, 100, 60, 100][s % 5] : undefined,
+      });
+    }
+  }
+  return out.sort((a, b) => {
+    const key = (c: Call) => c.date.split(".").reverse().join("") + c.time.replace(/:/g, "");
+    return key(a) < key(b) ? 1 : -1;
+  });
+}
+
 function CallsTab({ serviceId }: { serviceId: string }) {
   const [period, setPeriod] = React.useState<CallPeriod>("month");
   const [customFrom, setCustomFrom] = React.useState<string>(""); // YYYY-MM-DD
@@ -558,11 +619,12 @@ function CallsTab({ serviceId }: { serviceId: string }) {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Call | null>(null);
 
-  // Демо-«сегодня»: сдвигаем журнал так, чтобы свежий звонок пришёлся на сегодня.
-  const serviceCalls = shiftCallsToNow(
-    calls.filter((c) => c.serviceId === serviceId)
-  );
+  // Демо-журнал: полноценная лента за последние ~30 дней (свежий звонок — сегодня).
   const now = new Date();
+  const serviceCalls = buildDemoJournal(
+    calls.filter((c) => c.serviceId === serviceId),
+    now
+  );
   const days = period === "today" ? 1 : period === "week" ? 7 : period === "month" ? 31 : null;
   const cutoff = days !== null ? new Date(now.getTime() - days * 86400000) : null;
   const fromDate = period === "custom" && customFrom ? new Date(customFrom) : null;

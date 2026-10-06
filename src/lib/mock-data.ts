@@ -141,7 +141,7 @@ export const connectedServices: ConnectedService[] = [
   },
   {
     id: "hotline-fte",
-    name: "Горячая Линия Адамас",
+    name: "Горячая Линия e-commerce",
     billingNote: "Выделенные операторы (FTE)",
     phoneNumber: "+7 800 555-18-20",
     stage: "active",
@@ -1205,9 +1205,9 @@ export const archivedReports: ArchivedReport[] = [
   { id: "r-out-q1-2026", service: "Исходящая Q1 — Реактивация спящих", serviceId: "outbound-q2", period: "Q1 2026", type: "quarterly", publishedAt: "10.04.2026", fileSizeKb: 380 },
   { id: "r-out-q4-2025", service: "Исходящая Q4 — Чёрная пятница 2025", serviceId: "outbound-q2", period: "Q4 2025", type: "quarterly", publishedAt: "12.01.2026", fileSizeKb: 420 },
   { id: "r-out-q3-2025", service: "Исходящая Q3 — Опрос NPS базы", serviceId: "outbound-q2", period: "Q3 2025", type: "quarterly", publishedAt: "08.10.2025", fileSizeKb: 290 },
-  { id: "r-fte-2026-05", service: "Горячая Линия Адамас", serviceId: "hotline-fte", period: "Май 2026", type: "monthly", publishedAt: "05.06.2026", fileSizeKb: 198 },
-  { id: "r-fte-2026-04", service: "Горячая Линия Адамас", serviceId: "hotline-fte", period: "Апрель 2026", type: "monthly", publishedAt: "05.05.2026", fileSizeKb: 192 },
-  { id: "r-fte-2026-03", service: "Горячая Линия Адамас", serviceId: "hotline-fte", period: "Март 2026", type: "monthly", publishedAt: "05.04.2026", fileSizeKb: 205 },
+  { id: "r-fte-2026-05", service: "Горячая Линия e-commerce", serviceId: "hotline-fte", period: "Май 2026", type: "monthly", publishedAt: "05.06.2026", fileSizeKb: 198 },
+  { id: "r-fte-2026-04", service: "Горячая Линия e-commerce", serviceId: "hotline-fte", period: "Апрель 2026", type: "monthly", publishedAt: "05.05.2026", fileSizeKb: 192 },
+  { id: "r-fte-2026-03", service: "Горячая Линия e-commerce", serviceId: "hotline-fte", period: "Март 2026", type: "monthly", publishedAt: "05.04.2026", fileSizeKb: 205 },
   // Квартальные ИИ-отчёты
   { id: "r-q-2026-q1", service: "Ежеквартальный ИИ-отчёт", serviceId: "quarter-report", period: "Q1 2026", type: "quarterly", publishedAt: "15.04.2026", fileSizeKb: 580 },
   { id: "r-q-2025-q4", service: "Ежеквартальный ИИ-отчёт", serviceId: "quarter-report", period: "Q4 2025", type: "quarterly", publishedAt: "15.01.2026", fileSizeKb: 540 },
@@ -2423,7 +2423,7 @@ export const serviceScripts: Record<string, ServiceScript> = {
   },
 
   "hotline-fte": {
-    serviceName: "Горячая Линия Адамас",
+    serviceName: "Горячая Линия e-commerce",
     version: "2.5",
     updatedAt: "02.06.2026",
     approvedBy: "Петрова Е.С. (директор по работе с корп. клиентами Адамас)",
