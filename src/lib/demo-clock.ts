@@ -181,3 +181,55 @@ export function shiftCallsToNow<T extends { date: string }>(
     return { ...c, date: fmtDmy(dt) };
   });
 }
+
+// ─────────── Кварталы ───────────
+
+/** Сдвиг в кварталах: квартал реального «сейчас» минус якорный Q2 2026. */
+export function quarterShift(now: Date = new Date()): number {
+  return (now.getFullYear() - ANCHOR_YEAR) * 4 + (Math.floor(now.getMonth() / 3) - Math.floor(ANCHOR_MONTH / 3));
+}
+
+/** Сдвинуть метки вида «Q1 2026» на shift кварталов (с переносом года). */
+export function shiftQuarterString(input: string, shift: number = quarterShift()): string {
+  if (!shift || !input) return input;
+  return input.replace(/Q([1-4]) (20\d\d)/g, (_m, q: string, y: string) => {
+    const total = Number(y) * 4 + (Number(q) - 1) + shift;
+    return `Q${(total % 4) + 1} ${Math.floor(total / 4)}`;
+  });
+}
+
+// ─────────── Сроки проектной исходящей кампании ───────────
+
+const SHORT_GEN = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+/**
+ * Кампания длится 13 недель; в демо-данных «сегодня» — 64-й день (идёт 10-я
+ * неделя), до финиша 26 дней. Считаем даты от реального «сегодня», чтобы
+ * прогресс кампании всегда был актуальным.
+ */
+export function outboundCampaignDates(now: Date = new Date()) {
+  const start = addDays(now, -63);
+  const end = addDays(now, 26);
+  const weekLabels = Array.from({ length: 13 }, (_, i) => {
+    const a = addDays(start, i * 7);
+    const b = i === 12 ? end : addDays(a, 6);
+    const range =
+      a.getMonth() === b.getMonth()
+        ? `${a.getDate()}–${b.getDate()} ${SHORT_GEN[b.getMonth()]}`
+        : `${a.getDate()} ${SHORT_GEN[a.getMonth()]}–${b.getDate()} ${SHORT_GEN[b.getMonth()]}`;
+    return `Нед ${i + 1} (${range})`;
+  });
+  return {
+    startDate: fmtDmy(start),
+    endDate: fmtDmy(end),
+    today: fmtDmy(addDays(now, 0)),
+    endLabel: shortDateLabel(end),
+    weekLabels,
+  };
+}

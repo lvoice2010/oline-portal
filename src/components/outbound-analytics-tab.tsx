@@ -16,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { outboundAnalytics, type ReportTone } from "@/lib/mock-data";
+import { outboundCampaignDates } from "@/lib/demo-clock";
 
 const SEVERITY_STYLE = {
   high: {
@@ -96,7 +97,7 @@ export function OutboundAnalyticsTab({ serviceId }: { serviceId: string }) {
           Аналитика кампании
         </h2>
         <p className="mt-0.5 text-xs text-navy/55">
-          {a.period} · автоматически обновляется каждую неделю
+          по {outboundCampaignDates().today} · автоматически обновляется каждую неделю
         </p>
       </div>
 
@@ -188,7 +189,7 @@ export function OutboundAnalyticsTab({ serviceId }: { serviceId: string }) {
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-navy/45">
-                  Тренд за квартал
+                  Динамика
                 </p>
                 <p
                   className={cn(
@@ -450,7 +451,7 @@ function WhatIfSimulatorOutbound({
           <div className="min-w-0 flex-1">
             {roi >= 200 ? (
               <p>
-                <strong>Сильный сценарий.</strong> ROI {roi}% — выше Q2 2026 (285%).
+                <strong>Сильный сценарий.</strong> ROI {roi}% — выше текущей кампании (285%).
                 {hotShare >= 30 &&
                   " Доля горячих ≥30% — это правильное направление."}
                 {overCapacity &&

@@ -28,6 +28,51 @@ function fmtDuration(sec: number): string {
   return s === 0 ? `${m} мин` : `${m} мин ${String(s).padStart(2, "0")} сек`;
 }
 
+// Демо-журнал исходящих: полноценная лента за последние ~30 дней (свежий звонок —
+// сегодня) на основе реальных демо-записей кампании. Статус задаётся раскладкой,
+// а запись-шаблон берётся того же статуса — стенограмма, ИИ-карточка и причина
+// «без целевого» остаются согласованными с исходом.
+function buildDemoOutboundJournal(pool: OutboundCall[], now: Date): OutboundCall[] {
+  if (pool.length === 0) return pool;
+  const byStatus: Record<OutboundCallStatus, OutboundCall[]> = {
+    target: pool.filter((c) => c.status === "target"),
+    reached: pool.filter((c) => c.status === "reached"),
+    not_reached: pool.filter((c) => c.status === "not_reached"),
+  };
+  const operators = Array.from(new Map(pool.map((c) => [c.operator.id, c.operator])).values());
+  const phones = Array.from(new Set(pool.map((c) => c.contactNumber)));
+  const out: OutboundCall[] = [];
+  let s = 0;
+  for (let d = 0; d <= 31; d++) {
+    const perDay = d <= 1 ? 6 : d <= 6 ? 4 : 2;
+    for (let j = 0; j < perDay; j++, s++) {
+      const dt = new Date(now);
+      dt.setDate(now.getDate() - d);
+      const hh = String(9 + ((j * 2 + (s % 2)) % 9)).padStart(2, "0");
+      const mm = String((s * 17) % 60).padStart(2, "0");
+      const ss = String((s * 29) % 60).padStart(2, "0");
+      const roll = (s * 37) % 100;
+      let status: OutboundCallStatus = roll < 30 ? "target" : roll < 62 ? "reached" : "not_reached";
+      if (byStatus[status].length === 0) status = pool[s % pool.length].status;
+      const bucket = byStatus[status];
+      const t = bucket[s % bucket.length];
+      out.push({
+        ...t,
+        id: `gen-${pool[0].serviceId}-${s}`,
+        uid: `gen.${1780000000 + s * 137}.${s}`,
+        date: `${String(dt.getDate()).padStart(2, "0")}.${String(dt.getMonth() + 1).padStart(2, "0")}.${dt.getFullYear()}`,
+        time: `${hh}:${mm}:${ss}`,
+        operator: operators[s % operators.length],
+        contactNumber: phones[s % phones.length],
+      });
+    }
+  }
+  return out.sort((a, b) => {
+    const key = (c: OutboundCall) => c.date.split(".").reverse().join("") + c.time.replace(/:/g, "");
+    return key(a) < key(b) ? 1 : -1;
+  });
+}
+
 export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
   const [period, setPeriod] = React.useState<Period>("month");
   const [customFrom, setCustomFrom] = React.useState<string>("");
@@ -48,8 +93,11 @@ export function OutboundCallsTab({ serviceId }: { serviceId: string }) {
 
   // FTE-исход переиспользует журнал проектной исходящей
   const callsServiceId = serviceId === "outbound-fte" ? "outbound-q2" : serviceId;
-  const serviceCalls = outboundCalls.filter((c) => c.serviceId === callsServiceId);
   const now = new Date();
+  const serviceCalls = buildDemoOutboundJournal(
+    outboundCalls.filter((c) => c.serviceId === callsServiceId),
+    now
+  );
   const days = period === "today" ? 1 : period === "week" ? 7 : period === "month" ? 31 : null;
   const cutoff = days !== null ? new Date(now.getTime() - days * 86400000) : null;
   const fromDate = period === "custom" && customFrom ? new Date(customFrom) : null;

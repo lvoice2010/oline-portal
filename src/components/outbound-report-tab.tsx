@@ -21,14 +21,28 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { outboundReports } from "@/lib/mock-data";
+import { outboundReports, type OutboundReport } from "@/lib/mock-data";
+import { outboundCampaignDates } from "@/lib/demo-clock";
 
 const NAVY = "#1F5240";
 const SAGE = "#7CB342";
 const COPPER = "#C9633F";
 
+// Демо-часы: сроки кампании, недели и «сегодня» — от реальной даты.
+export function demoizeOutboundReport(report: OutboundReport, now: Date = new Date()): OutboundReport {
+  const d = outboundCampaignDates(now);
+  const fixEnd = (s: string) => s.replace("30 июня", d.endLabel);
+  return {
+    ...report,
+    campaign: { ...report.campaign, startDate: d.startDate, endDate: d.endDate, today: d.today },
+    weeklyDynamics: report.weeklyDynamics.map((w, i) => ({ ...w, week: d.weekLabels[i] ?? w.week })),
+    forecast: report.forecast.map((f) => ({ ...f, label: fixEnd(f.label), value: fixEnd(f.value) })),
+  };
+}
+
 export function OutboundReportTab({ serviceId }: { serviceId: string }) {
-  const report = outboundReports[serviceId];
+  const raw = outboundReports[serviceId];
+  const report = React.useMemo(() => (raw ? demoizeOutboundReport(raw) : raw), [raw]);
   if (!report) {
     return (
       <Card className="p-8 text-center text-sm text-navy/55">
@@ -349,7 +363,7 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             <h3 className="text-sm font-semibold text-navy">
               Динамика по неделям кампании
               <span className="ml-1.5 text-[11px] font-normal text-navy/45">
-                · 13 недель Q2
+                · 13 недель
               </span>
             </h3>
             <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-sky-700">

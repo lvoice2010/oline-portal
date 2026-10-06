@@ -25,7 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { shiftDateString, monthShift } from "@/lib/demo-clock";
+import { shiftDateString, monthShift, shiftQuarterString } from "@/lib/demo-clock";
 import {
   connectedServices,
   calls,
@@ -515,8 +515,9 @@ function ReportsActionsBlock({ serviceId }: { serviceId: string }) {
   if (!latest) return null;
 
   // Демо-«сегодня»: сдвигаем месяц последнего отчёта к реальной дате
-  const period = shiftDateString(latest.period, monthShift());
-  const monthLower = period.split(" ")[0].toLowerCase();
+  const period = shiftQuarterString(shiftDateString(latest.period, monthShift()));
+  const first = period.split(" ")[0];
+  const monthLower = /^Q[1-4]$/.test(first) ? period : first.toLowerCase();
   return (
     <div className="flex w-[220px] flex-col gap-1.5 rounded-xl border border-navy/[0.06] bg-white p-2 shadow-soft">
       <p className="px-1 pt-0.5 text-[10px] uppercase tracking-wider text-navy/40">
