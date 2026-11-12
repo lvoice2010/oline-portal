@@ -5,7 +5,7 @@ import { Eye, Search, Headphones } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DialogDetailModal, OUTCOME_BADGE } from "@/components/dialog-detail-modal";
 import { cn } from "@/lib/utils";
-import type { Dialog } from "@/lib/mock-data";
+import { outboundReports, type Dialog } from "@/lib/mock-data";
 import { buildOutboundAiDialogs, OUTBOUND_AI_RATE } from "@/lib/outbound-ai-dialogs";
 
 type Period = "today" | "week" | "month" | "all";
@@ -36,7 +36,7 @@ function matches(d: Dialog, f: OutcomeFilter) {
   const o = d.outbound!;
   if (f === "all") return true;
   if (f === "transfer") return d.escalated;
-  if (f === "target") return o.outcomeTone === "target" && !d.escalated;
+  if (f === "target") return o.outcomeTone === "target";
   return o.outcomeTone === f;
 }
 
@@ -69,24 +69,27 @@ export function OutboundAiDialogsTab() {
     return true;
   });
 
-  const consents = inPeriod.filter((d) => d.outbound!.outcomeTone === "target" && !d.escalated).length;
-  const transferred = inPeriod.filter((d) => d.escalated).length;
-  const refused = inPeriod.filter((d) => d.outbound!.outcomeTone === "refuse").length;
-  const totalSec = inPeriod.reduce((s, d) => s + d.durationSec, 0);
-  const minutes = Math.round((totalSec / 60) * 10) / 10;
-  const cost = Math.round(minutes * OUTBOUND_AI_RATE);
+  // Сводка — из тех же агрегатов, что и отчёт по кампании (совпадает с воронкой);
+  // таблица ниже — выборка последних разговоров.
+  const t = periodTotals(period);
+  const cost = Math.round(t.minutes * OUTBOUND_AI_RATE);
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Kpi label="Разговоров" value={inPeriod.length} />
-        <Kpi label="Согласий" value={consents} tone="emerald" />
-        <Kpi label="Передано менеджеру" value={transferred} tone="sky" />
-        <Kpi label="Отказов" value={refused} tone="rose" />
+        <Kpi label="Разговоров" value={t.reached} />
+        <Kpi
+          label="Согласий"
+          value={t.consents}
+          tone="emerald"
+          hint={`${fmt(t.consents - t.transferred)} промокод · ${fmt(t.transferred)} менеджеру`}
+        />
+        <Kpi label="Перезвонить" value={t.callbacks} tone="amber" hint="звонок назначен" />
+        <Kpi label="Отказов" value={t.refused} tone="rose" />
         <Card className="p-4">
           <p className="text-xs text-navy/55">Минут разговора</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-navy">
-            {minutes.toLocaleString("ru-RU")}
+            {fmt(t.minutes)}
           </p>
           <p className="text-[11px] tabular-nums text-navy/50">
             ≈ {cost.toLocaleString("ru-RU")} ₽ · {OUTBOUND_AI_RATE.toLocaleString("ru-RU")} ₽/мин
@@ -173,8 +176,7 @@ export function OutboundAiDialogsTab() {
           </table>
         </div>
         <div className="border-t border-navy/[0.06] bg-white px-4 py-3 text-xs text-navy/55">
-          Показано {filtered.length} из {inPeriod.length} разговоров за период · в демо-журнале
-          выборка разговоров кампании
+          В таблице — последние разговоры: {filtered.length} из {fmt(t.reached)} за период
         </div>
       </Card>
 
@@ -183,18 +185,66 @@ export function OutboundAiDialogsTab() {
   );
 }
 
-function Kpi({ label, value, tone }: { label: string; value: number; tone?: "emerald" | "sky" | "rose" }) {
+const fmt = (n: number) => n.toLocaleString("ru-RU");
+
+// Итоги разговоров за период. «Вся кампания» и «Месяц» (кампания идёт 3 недели)
+// — ровно цифры отчёта; «Неделя» — 3-я неделя из динамики отчёта;
+// «Сегодня» — неполный день при темпе 850 контактов в сутки.
+function periodTotals(period: Period) {
+  const r = outboundReports["outbound-ai"];
+  const avgMin = r.ai!.talkMinutes / r.funnel.reached; // 1,6 мин на разговор
+  const share = (name: string) =>
+    (r.outcomes!.find((o) => o.name.startsWith(name))?.count ?? 0) / r.funnel.reached;
+  const promoShare = share("Согласие") / (share("Согласие") + share("Передан"));
+
+  if (period === "all" || period === "month") {
+    const by = (name: string) => r.outcomes!.find((o) => o.name.startsWith(name))?.count ?? 0;
+    return {
+      reached: r.funnel.reached,
+      consents: r.funnel.targets,
+      transferred: by("Передан"),
+      callbacks: by("Попросил перезвонить"),
+      refused: by("Отказ"),
+      minutes: r.ai!.talkMinutes,
+    };
+  }
+  const fact = r.weeklyDynamics.filter((w) => w.reached !== null);
+  const lastWeek = fact[fact.length - 1];
+  const reached = period === "week" ? lastWeek.reached! : 460;
+  const consents = period === "week" ? lastWeek.targets! : 92;
+  return {
+    reached,
+    consents,
+    transferred: consents - Math.round(consents * promoShare),
+    callbacks: Math.round(reached * share("Попросил перезвонить")),
+    refused: Math.round(reached * share("Отказ")),
+    minutes: Math.round(reached * avgMin),
+  };
+}
+
+function Kpi({
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  label: string;
+  value: number;
+  tone?: "emerald" | "amber" | "rose";
+  hint?: string;
+}) {
   return (
     <Card className="p-4">
       <p className="text-xs text-navy/55">{label}</p>
       <p
         className={cn(
           "mt-1 text-2xl font-semibold tabular-nums",
-          tone === "emerald" ? "text-emerald-600" : tone === "sky" ? "text-sky-700" : tone === "rose" ? "text-rose-600" : "text-navy"
+          tone === "emerald" ? "text-emerald-600" : tone === "amber" ? "text-amber-600" : tone === "rose" ? "text-rose-600" : "text-navy"
         )}
       >
-        {value}
+        {fmt(value)}
       </p>
+      {hint && <p className="text-[11px] tabular-nums text-navy/50">{hint}</p>}
     </Card>
   );
 }
