@@ -673,10 +673,11 @@ function OutcomesCard({ report }: { report: OutboundReport }) {
 
       <Card className="p-5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
-          Причины отказов и как нейроассистент их отрабатывает
+          Причины отказов
         </p>
         <p className="mt-1 text-[11px] text-navy/55">
-          доля — от всех отказов · «переубедил» — сколько клиентов после ответа согласились
+          {report.objections.reduce((s, o) => s + o.count, 0).toLocaleString("ru-RU")} отказов ·
+          доля от всех отказов
         </p>
         <div className="mt-4 space-y-3">
           {report.objections.map((o) => (
@@ -684,12 +685,10 @@ function OutcomesCard({ report }: { report: OutboundReport }) {
               <div className="flex items-baseline justify-between gap-3 text-xs">
                 <span className="text-navy/80">{o.name}</span>
                 <span className="shrink-0 tabular-nums text-navy/60">
-                  <span className="font-semibold text-navy">{o.pct}%</span>
-                  {o.resolveRate > 0 && (
-                    <span className="ml-2 text-emerald-700">
-                      переубедил {o.resolveRate}%
-                    </span>
-                  )}
+                  <span className="font-semibold text-navy">
+                    {o.count.toLocaleString("ru-RU")}
+                  </span>{" "}
+                  · {o.pct}%
                 </span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
