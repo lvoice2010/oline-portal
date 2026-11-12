@@ -14,6 +14,7 @@ import {
   PhoneOutgoing,
   ShieldCheck,
   Sparkles,
+  Bot,
   FileBarChart,
   FolderArchive,
   HelpCircle,
@@ -30,6 +31,7 @@ const SERVICE_ICON: Record<string, LucideIcon> = {
   "outbound-q2": PhoneOutgoing,
   "qa-control": ShieldCheck,
   chatbot: Sparkles,
+  "outbound-ai": Bot,
   "quarter-report": FileBarChart,
 };
 

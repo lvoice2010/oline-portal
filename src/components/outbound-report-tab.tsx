@@ -9,6 +9,7 @@ import {
   Calendar,
   PhoneCall,
   Wallet,
+  Bot,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -30,7 +31,7 @@ const COPPER = "#C9633F";
 
 // Демо-часы: сроки кампании, недели и «сегодня» — от реальной даты.
 export function demoizeOutboundReport(report: OutboundReport, now: Date = new Date()): OutboundReport {
-  const d = outboundCampaignDates(now);
+  const d = outboundCampaignDates(now, report.campaign.demoWindow);
   const fixEnd = (s: string) => s.replace("30 июня", d.endLabel);
   return {
     ...report,
@@ -335,7 +336,9 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
           </div>
         </Card>
 
-        {/* Качество */}
+        {report.ai ? (
+          <AiWorkCard report={report} />
+        ) : (
         <Card className="p-5">
           <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
             Качество звонков
@@ -353,8 +356,11 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             />
           </div>
         </Card>
+        )}
 
       </div>
+
+      {report.outcomes && <OutcomesCard report={report} />}
 
       {/* Динамика по неделям — на всю ширину после удаления теплокарты */}
       <div>
@@ -363,7 +369,7 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
             <h3 className="text-sm font-semibold text-navy">
               Динамика по неделям кампании
               <span className="ml-1.5 text-[11px] font-normal text-navy/45">
-                · 13 недель
+                · {weeksLabel(report.weeklyDynamics.length)}
               </span>
             </h3>
             <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-sky-700">
@@ -507,6 +513,191 @@ export function OutboundReportTab({ serviceId }: { serviceId: string }) {
               <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-copper/10 px-2 py-0.5 text-[11px] font-medium text-copper">
                 <ShieldCheck size={11} /> {r.effect}
               </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function weeksLabel(n: number) {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  const word =
+    m10 === 1 && m100 !== 11
+      ? "неделя"
+      : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)
+      ? "недели"
+      : "недель";
+  return `${n} ${word}`;
+}
+
+const rub = (n: number) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
+
+// Работа нейроассистента: сам ли довёл разговор, сколько стоило и сколько
+// операторов понадобилось бы на тот же темп.
+function AiWorkCard({ report }: { report: OutboundReport }) {
+  const ai = report.ai!;
+  const cheaper = ai.operatorCostPerLead / report.campaign.costPerLead;
+  return (
+    <Card className="p-5">
+      <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+        <Bot size={13} /> Работа нейроассистента
+      </p>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="rounded-card border border-emerald-200 bg-emerald-50/50 p-3">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-emerald-700">
+            Без оператора
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-navy">
+            {ai.closedByAiPct}%
+          </p>
+          <p className="text-[11px] text-navy/55">разговоров довёл до конца сам</p>
+        </div>
+        <div className="rounded-card border border-sky-200 bg-sky-50/50 p-3">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-sky-700">
+            Передал менеджеру
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-navy">
+            {ai.transferred.toLocaleString("ru-RU")}
+          </p>
+          <p className="text-[11px] text-navy/55">
+            готовых к заказу · {ai.transferredPct}% разговоров
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <QualityRow
+          label="Одновременных разговоров"
+          value={`до ${ai.parallelLines}`}
+          hint={`темп как у команды из ${ai.operatorsEquivalent} операторов`}
+        />
+        <QualityRow
+          label="Среднее время разговора"
+          value={report.quality.avgTalkTime}
+          hint={`до согласия — ${report.quality.timeToResult}`}
+        />
+        <QualityRow
+          label="Понял ответ клиента с первого раза"
+          value={`${ai.understoodPct}%`}
+          hint="в остальных случаях переспросил"
+        />
+        <QualityRow
+          label="Назначил повторный звонок сам"
+          value={ai.callbacksScheduled.toLocaleString("ru-RU")}
+          hint="клиент попросил перезвонить в другое время"
+        />
+      </div>
+
+      <div className="mt-4 rounded-card border border-copper/30 bg-copper/[0.06] p-3">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-copper">
+          Стоимость кампании
+        </p>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <div>
+            <p className="text-[10px] text-navy/55">Минут разговора</p>
+            <p className="text-base font-semibold tabular-nums text-navy">
+              {ai.talkMinutes.toLocaleString("ru-RU")}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-navy/55">К оплате</p>
+            <p className="text-base font-semibold tabular-nums text-navy">
+              {rub(ai.totalCost)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-navy/55">Одно согласие</p>
+            <p className="text-base font-semibold tabular-nums text-emerald-700">
+              {rub(report.campaign.costPerLead)}
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-navy/60">
+          Ставка {ai.ratePerMinute.toLocaleString("ru-RU")} ₽ за минуту разговора, гудки и
+          недозвоны не оплачиваются. В операторской кампании согласие стоит{" "}
+          {rub(ai.operatorCostPerLead)} — здесь в{" "}
+          {cheaper.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} раза дешевле.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+const OUTCOME_COLOR: Record<NonNullable<OutboundReport["outcomes"]>[number]["tone"], string> = {
+  target: "bg-emerald-500",
+  warm: "bg-amber-400",
+  neutral: "bg-navy/30",
+  refuse: "bg-rose-400",
+};
+
+// Итоги разговоров + возражения: чем закончились разговоры и что мешает согласию.
+function OutcomesCard({ report }: { report: OutboundReport }) {
+  const outcomes = report.outcomes!;
+  const max = Math.max(...outcomes.map((o) => o.count));
+  const maxObj = Math.max(...report.objections.map((o) => o.count));
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <Card className="p-5">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
+          Чем закончились разговоры
+        </p>
+        <p className="mt-1 text-[11px] text-navy/55">
+          {report.funnel.reached.toLocaleString("ru-RU")} разговоров с клиентами
+        </p>
+        <div className="mt-4 space-y-3">
+          {outcomes.map((o) => (
+            <div key={o.name} className="space-y-1">
+              <div className="flex items-baseline justify-between gap-3 text-xs">
+                <span className="text-navy/80">{o.name}</span>
+                <span className="shrink-0 tabular-nums text-navy/60">
+                  <span className="font-semibold text-navy">
+                    {o.count.toLocaleString("ru-RU")}
+                  </span>{" "}
+                  · {o.pct.toLocaleString("ru-RU")}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
+                <div
+                  className={cn("h-full rounded-full", OUTCOME_COLOR[o.tone])}
+                  style={{ width: `${(o.count / max) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-navy/55">
+          Причины отказов и как нейроассистент их отрабатывает
+        </p>
+        <p className="mt-1 text-[11px] text-navy/55">
+          доля — от всех отказов · «переубедил» — сколько клиентов после ответа согласились
+        </p>
+        <div className="mt-4 space-y-3">
+          {report.objections.map((o) => (
+            <div key={o.name} className="space-y-1">
+              <div className="flex items-baseline justify-between gap-3 text-xs">
+                <span className="text-navy/80">{o.name}</span>
+                <span className="shrink-0 tabular-nums text-navy/60">
+                  <span className="font-semibold text-navy">{o.pct}%</span>
+                  {o.resolveRate > 0 && (
+                    <span className="ml-2 text-emerald-700">
+                      переубедил {o.resolveRate}%
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
+                <div
+                  className="h-full rounded-full bg-rose-400"
+                  style={{ width: `${(o.count / maxObj) * 100}%` }}
+                />
+              </div>
             </div>
           ))}
         </div>

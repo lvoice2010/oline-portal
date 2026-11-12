@@ -70,13 +70,17 @@ function getTabsForService(serviceId: string) {
   if (serviceId === "chatbot") {
     return [TAB_REPORTS, TAB_ANALYTICS, TAB_KB, TAB_DIALOGS];
   }
+  // Нейроассистент на исходящие — пока только отчёт по кампании
+  if (serviceId === "outbound-ai") {
+    return [TAB_REPORTS];
+  }
   // Голосовые линии: добавляем «Скрипт» между аналитикой и вызовами
   return [TAB_REPORTS, TAB_ANALYTICS, TAB_SCRIPT, TAB_CALLS];
 }
 
 // Услуги исходящего обзвона — используют отчёт/аналитику/журнал исходящей
 // (проектная кампания и FTE-исход показывают одинаковый отчёт).
-const OUTBOUND_SERVICES = new Set(["outbound-q2", "outbound-fte"]);
+const OUTBOUND_SERVICES = new Set(["outbound-q2", "outbound-fte", "outbound-ai"]);
 
 type TabId =
   | typeof TAB_REPORTS.id

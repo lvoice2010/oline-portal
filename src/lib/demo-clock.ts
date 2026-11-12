@@ -214,12 +214,19 @@ function addDays(d: Date, n: number): Date {
  * неделя), до финиша 26 дней. Считаем даты от реального «сегодня», чтобы
  * прогресс кампании всегда был актуальным.
  */
-export function outboundCampaignDates(now: Date = new Date()) {
-  const start = addDays(now, -63);
-  const end = addDays(now, 26);
-  const weekLabels = Array.from({ length: 13 }, (_, i) => {
+export function outboundCampaignDates(
+  now: Date = new Date(),
+  window: { pastDays: number; futureDays: number; weeks: number } = {
+    pastDays: 63,
+    futureDays: 26,
+    weeks: 13,
+  }
+) {
+  const start = addDays(now, -window.pastDays);
+  const end = addDays(now, window.futureDays);
+  const weekLabels = Array.from({ length: window.weeks }, (_, i) => {
     const a = addDays(start, i * 7);
-    const b = i === 12 ? end : addDays(a, 6);
+    const b = i === window.weeks - 1 ? end : addDays(a, 6);
     const range =
       a.getMonth() === b.getMonth()
         ? `${a.getDate()}–${b.getDate()} ${SHORT_GEN[b.getMonth()]}`

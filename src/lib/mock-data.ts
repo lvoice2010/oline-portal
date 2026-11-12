@@ -374,6 +374,56 @@ export const connectedServices: ConnectedService[] = [
       "Ежемесячный отчёт",
     ],
   },
+  {
+    id: "outbound-ai",
+    name: "Нейроассистент на исходящие звонки",
+    billingNote: "Оплата по факту использования",
+    stage: "active",
+    metricLabel: "Согласий за кампанию",
+    metricValue: "1 830",
+    usage: {
+      label: "Минуты разговоров в этом месяце",
+      used: 9820,
+      unit: "мин",
+      rate: 13.5,
+    },
+    extraMetrics: [
+      {
+        label: "Дозвон",
+        value: "64%",
+        tone: "ok",
+        tooltip: "Доля обработанных контактов, с которыми нейроассистент поговорил лично.",
+      },
+      {
+        label: "Конверсия",
+        value: "20%",
+        tone: "ok",
+        tooltip: "Доля разговоров, закончившихся согласием на предложение.",
+      },
+      {
+        label: "Цена согласия",
+        value: "108 ₽",
+        tone: "ok",
+        tooltip:
+          "Стоимость одного целевого действия: оплата минут разговора, делённая на число согласий. У операторской кампании — 850 ₽.",
+      },
+    ],
+    submittedAt: "08.09.2026",
+    connectedAt: "28.09.2026",
+    manager: { name: "Светлана Носенко", initials: "СН", phone: "+7 (495) 120-45-83", telegram: "nosenko_oline", email: "s.nosenko@oline.ru" },
+    tariff: "Оплата по факту: 13,5 ₽ за минуту разговора",
+    contract: "№ 09-14/2026 от 15.09.2026",
+    counterparty: "ООО «Перформанс Контакт»",
+    schedule: "Ежедневно, 09:00–21:00 по местному времени контакта",
+    includes: [
+      "Обзвон базы нейроассистентом — до 30 разговоров одновременно",
+      "Сценарий разговора и ответы на возражения под вашу задачу",
+      "До 3 попыток дозвона, повторный звонок в удобное клиенту время",
+      "Передача заинтересованных клиентов вашему менеджеру",
+      "Отправка SMS с промокодом сразу после согласия",
+      "Запись и расшифровка всех разговоров, отчёт по кампании",
+    ],
+  },
 ];
 
 export type PromoCta = "connect" | "try" | "request";
@@ -2750,7 +2800,31 @@ export type OutboundReport = {
     leads: number;           // 1 020
     costPerLead: number;     // 850
     roi: number;             // 285 (в %)
+    // Окно демо-часов: сколько дней кампании прошло / осталось и сколько в ней недель.
+    // Не задано — 13-недельная кампания (63 дня прошло, 26 осталось).
+    demoWindow?: { pastDays: number; futureDays: number; weeks: number };
   };
+  // Только для обзвона нейроассистентом: как ИИ отработал разговоры и сколько это стоило
+  ai?: {
+    closedByAiPct: number;        // разговоров доведено до конца без оператора
+    transferred: number;          // передано менеджеру клиента
+    transferredPct: number;
+    parallelLines: number;        // одновременных разговоров
+    understoodPct: number;        // ответы клиентов распознаны с первого раза
+    callbacksScheduled: number;   // повторные звонки, которые ИИ назначил сам
+    talkMinutes: number;          // минут разговора за кампанию
+    ratePerMinute: number;        // ₽ за минуту разговора
+    totalCost: number;            // ₽ за кампанию
+    operatorCostPerLead: number;  // стоимость целевого действия у операторской кампании
+    operatorsEquivalent: number;  // сколько операторов понадобилось бы на тот же темп
+  };
+  // Итоги разговоров (в сумме = дозвонились)
+  outcomes?: {
+    name: string;
+    count: number;
+    pct: number;
+    tone: "target" | "warm" | "neutral" | "refuse";
+  }[];
   funnel: {
     contactsProcessed: number;  // 5 750 — уникальных контактов в работе
     totalAttempts: number;      // 10 350 — попыток сделано всего
@@ -5607,3 +5681,141 @@ outboundReports["outbound-fte"] = {
   },
 };
 outboundAnalytics["outbound-fte"] = outboundAnalytics["outbound-q2"];
+
+// ── Нейроассистент на исходящие звонки ──
+// 4-недельная кампания: прошло 21 день, осталось 7. Числа сходятся:
+// обработано = дозвон + нет дозвона; итоги разговоров в сумме = дозвон;
+// стоимость = минуты × ставка; цена согласия = стоимость / согласия.
+outboundReports["outbound-ai"] = {
+  campaign: {
+    name: "Реактивация спящих клиентов",
+    startDate: "",
+    endDate: "",
+    today: "",
+    baseTotal: 20000,
+    baseProcessed: 14300,
+    daysLeft: 7,
+    pacePerDay: 850,
+    onTrack: true,
+    statusNote: "успеваем в срок — при текущем темпе оставшиеся 5 700 контактов пройдём за 7 дней",
+    leads: 1830,
+    costPerLead: 108,
+    roi: 610,
+    demoWindow: { pastDays: 21, futureDays: 7, weeks: 4 },
+  },
+  funnel: {
+    contactsProcessed: 14300,
+    totalAttempts: 27900,
+    attemptsPerContact: 1.7,
+    reached: 9150,
+    reachedPct: 64,
+    notReached: 5150,
+    notReachedPct: 36,
+    inProgress: 2400,
+    reachedByAttempt: { first: 5600, second: 2300, third: 1250 },
+    targets: 1830,
+    conversionPct: 20.0,
+  },
+  quality: {
+    avgTalkTime: "1 мин 36 сек",
+    timeToResult: "1 мин 12 сек",
+    scriptMatch: 100,
+    objectionRate: 60,
+  },
+  ai: {
+    closedByAiPct: 93,
+    transferred: 660,
+    transferredPct: 7,
+    parallelLines: 30,
+    understoodPct: 96,
+    callbacksScheduled: 640,
+    talkMinutes: 14640,
+    ratePerMinute: 13.5,
+    totalCost: 197640,
+    operatorCostPerLead: 850,
+    operatorsEquivalent: 13,
+  },
+  outcomes: [
+    { name: "Согласие — промокод отправлен в SMS", count: 1170, pct: 12.8, tone: "target" },
+    { name: "Передан менеджеру — готов к заказу", count: 660, pct: 7.2, tone: "target" },
+    { name: "Попросил перезвонить — звонок назначен", count: 640, pct: 7.0, tone: "warm" },
+    { name: "Отказ", count: 5480, pct: 59.9, tone: "refuse" },
+    { name: "Попросил не звонить — исключён из базы", count: 780, pct: 8.5, tone: "neutral" },
+    { name: "Номер сменил владельца", count: 420, pct: 4.6, tone: "neutral" },
+  ],
+  leadsDestinations: [
+    { name: "Промокод в SMS", count: 1170, pct: 64 },
+    { name: "Менеджеру в Bitrix24", count: 660, pct: 36 },
+  ],
+  scriptStages: [
+    { name: "1. Приветствие и проверка, что говорим с нужным человеком", count: 8730, pct: 95 },
+    { name: "2. Напоминание о прошлых покупках", count: 7480, pct: 82 },
+    { name: "3. Персональное предложение", count: 6310, pct: 69 },
+    { name: "4. Ответ на возражения", count: 5480, pct: 60 },
+    { name: "5. Согласие и следующий шаг", count: 1830, pct: 20 },
+  ],
+  objections: [
+    { name: "Уже покупаю в другом месте", count: 1640, pct: 30, resolveRate: 18 },
+    { name: "Не интересно", count: 1480, pct: 27, resolveRate: 9 },
+    { name: "Дорого", count: 1100, pct: 20, resolveRate: 31 },
+    { name: "Нет времени говорить", count: 820, pct: 15, resolveRate: 44 },
+    { name: "Прочее", count: 440, pct: 8, resolveRate: 0 },
+  ],
+  baseSegments: [
+    { name: "Без заказа 3–6 месяцев", contacts: 6200, conversionPct: 27, targets: 1080, costPerLead: 82, tone: "ok" },
+    { name: "Без заказа 6–12 месяцев", contacts: 5100, conversionPct: 17, targets: 560, costPerLead: 125, tone: "ok" },
+    { name: "Без заказа больше года", contacts: 3000, conversionPct: 9, targets: 190, costPerLead: 236, tone: "warn" },
+  ],
+  heatmap: {
+    days: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+    hours: ["09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"],
+    data: [
+      [48, 58, 62, 60, 52, 55, 60, 62, 64, 70, 72, 66],
+      [50, 60, 64, 62, 54, 57, 62, 64, 66, 72, 74, 68],
+      [50, 60, 64, 62, 54, 57, 62, 64, 66, 72, 74, 68],
+      [49, 59, 63, 61, 53, 56, 61, 63, 65, 71, 73, 67],
+      [46, 55, 59, 57, 50, 52, 56, 58, 60, 66, 64, 58],
+      [40, 52, 60, 64, 62, 60, 58, 56, 55, 54, 50, 44],
+      [36, 48, 58, 62, 60, 58, 56, 54, 52, 52, 48, 40],
+    ],
+  },
+  operators: [],
+  weeklyDynamics: [
+    { week: "Нед 1", attempts: 8400, reached: 2750, targets: 520 },
+    { week: "Нед 2", attempts: 9600, reached: 3150, targets: 640 },
+    { week: "Нед 3", attempts: 9900, reached: 3250, targets: 670,
+      forecastAttempts: 9900, forecastReached: 3250, forecastTargets: 670 },
+    { week: "Нед 4", attempts: null, reached: null, targets: null,
+      forecastAttempts: 9700, forecastReached: 3150, forecastTargets: 650 },
+  ],
+  campaignCompare: [
+    { metric: "Контактов в день", prev: "260", curr: "850", delta: "×3,3", tone: "up" },
+    { metric: "Дозвон", prev: "68%", curr: "64%", delta: "−4 п.п.", tone: "warn" },
+    { metric: "Конверсия", prev: "23,4%", curr: "20,0%", delta: "−3,4 п.п.", tone: "warn" },
+    { metric: "Стоимость целевого действия", prev: "850 ₽", curr: "108 ₽", delta: "в 7,9 раза дешевле", tone: "ok" },
+  ],
+  forecast: [
+    { label: "Пройдём всю базу", value: "за 7 дней", note: "оставшиеся 5 700 контактов при темпе 850 в день", tone: "ok" },
+    { label: "Согласий до конца кампании", value: "≈ 2 480", note: "1 830 уже + около 650 за последнюю неделю", tone: "ok" },
+    { label: "Стоимость кампании", value: "≈ 266 000 ₽", note: "по факту минут разговора, ставка 13,5 ₽/мин", tone: "neutral" },
+  ],
+  insight:
+    "За 3 недели нейроассистент обработал 14 300 контактов из 20 000 — по 850 в день, столько же сделала бы команда из 13 операторов. Дозвон 64%, на предложение согласились 1 830 клиентов. Одно согласие обходится в 108 ₽ — в 7,9 раза дешевле, чем в операторской кампании (850 ₽). 93% разговоров нейроассистент довёл до конца сам, 660 готовых к заказу клиентов передал вашим менеджерам.",
+  recommendations: [
+    {
+      title: "Звонить чаще в 18:00–21:00",
+      body: "Вечером дозвон 70–74% против 58–64% в первой половине дня: спящие клиенты днём на работе. Если перенести треть звонков на вечер, за последнюю неделю получим примерно на 120 согласий больше — без дополнительных затрат.",
+      effect: "+120 согласий",
+    },
+    {
+      title: "Новый ответ на «уже покупаю в другом месте»",
+      body: "Это самое частое возражение — 30% отказов, и сейчас нейроассистент переубеждает только 18% таких клиентов. Если добавить в сценарий двойные баллы на первый заказ после перерыва, по опыту похожих кампаний результат вырастет до 30%. Сценарий обновим за 1 день.",
+      effect: "+200 согласий",
+    },
+    {
+      title: "Отдельное предложение для тех, кто не заказывал больше года",
+      body: "Здесь конверсия 9% и согласие стоит 236 ₽ — в 2,9 раза дороже, чем у клиентов с перерывом 3–6 месяцев. Им лучше подходит скидка на возвращение, а не напоминание о прошлых покупках.",
+      effect: "цена согласия ниже на 40%",
+    },
+  ],
+};
