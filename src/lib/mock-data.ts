@@ -3609,6 +3609,15 @@ export type Dialog = {
   // Стенограмма: bot = реплики нейроассистента, user = клиент, agent = оператор (после эскалации)
   transcript?: { speaker: "bot" | "user" | "agent"; text: string; time: string }[];
   hasRecording?: boolean; // голосовая запись (для phone-канала и эскалированных диалогов)
+  // Исходящий звонок нейроассистента: кому звонили и чем закончился разговор.
+  // agent в стенограмме = менеджер клиента, которому передан разговор.
+  outbound?: {
+    contactNumber: string;
+    segment: string;
+    attempt: number;
+    outcome: string;
+    outcomeTone: "target" | "warm" | "neutral" | "refuse";
+  };
 };
 
 const DIALOG_TRANSCRIPT_ORDER: Dialog["transcript"] = [

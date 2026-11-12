@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Отчёт по кампании — Нейроассистент на исходящие звонки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #0F2A22; --green: #1F5240; --sage: #7CB342; --sage-l: #EEF5EF;
+    --muted: #5E6F68; --line: #E3E9E5; --rose: #E5717F; --amber: #E8A93B; --sky: #3E8FC4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; background: #fff; }
+  .page:last-child { page-break-after: auto; }
+  .pad { padding: 0 16mm; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* шапка первой страницы */
+  .hero { background: var(--ink); color: #fff; padding: 11mm 16mm 9mm; position: relative; }
+  .hero::after { content: ""; position: absolute; right: -30mm; top: -30mm; width: 110mm; height: 110mm; border-radius: 50%; border: 18mm solid rgba(124,179,66,.13); }
+  .hero img { height: 11mm; }
+  .eyebrow { font-size: 8.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--sage); font-weight: 600; }
+  .hero .eyebrow { margin-top: 7mm; }
+  .hero h1 { font-size: 25pt; line-height: 1.15; font-weight: 700; margin-top: 2.5mm; max-width: 150mm; }
+  .hero .sub { margin-top: 3mm; font-size: 10.5pt; color: rgba(255,255,255,.75); }
+  .meta { display: flex; gap: 9mm; margin-top: 6mm; font-size: 8.5pt; color: rgba(255,255,255,.6); position: relative; z-index: 1; }
+  .meta b { display: block; color: #fff; font-size: 10pt; font-weight: 600; margin-top: .8mm; }
+
+  .mini-head { display: flex; justify-content: space-between; align-items: center; padding: 9mm 16mm 0; }
+  .mini-head img { height: 7mm; }
+  .mini-head span { font-size: 8pt; color: var(--muted); }
+
+  h2 { font-size: 13.5pt; font-weight: 700; margin-bottom: 3.5mm; }
+  .section { margin-top: 6.5mm; }
+  .note { font-size: 8.5pt; color: var(--muted); line-height: 1.45; }
+
+  /* прогресс */
+  .progress-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 10pt; }
+  .bar { height: 4mm; border-radius: 2mm; background: var(--sage-l); margin-top: 2.5mm; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 2mm; background: linear-gradient(90deg, var(--green), var(--sage)); }
+  .status { display: inline-block; margin-top: 3mm; font-size: 8.5pt; color: var(--green); background: var(--sage-l); border-radius: 10mm; padding: 1.2mm 3.5mm; font-weight: 500; }
+
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+  .kpi { border: 1px solid var(--line); border-radius: 3mm; padding: 3.2mm 4.5mm; }
+  .kpi .l { font-size: 7.8pt; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .kpi .v { font-size: 20pt; font-weight: 700; margin-top: 1.5mm; }
+  .kpi .h { font-size: 8pt; color: var(--muted); margin-top: .8mm; }
+  .kpi.accent { background: var(--green); border-color: var(--green); color: #fff; }
+  .kpi.accent .l, .kpi.accent .h { color: rgba(255,255,255,.7); }
+  .kpi.accent .v { color: #fff; }
+  .v.green { color: var(--green); }
+
+  .insight { background: var(--sage-l); border-left: 1.4mm solid var(--sage); border-radius: 2.5mm; padding: 4mm 6mm; font-size: 10pt; line-height: 1.55; }
+  .insight .eyebrow { color: var(--green); margin-bottom: 1.5mm; }
+
+  /* воронка */
+  .funnel { display: flex; flex-direction: column; gap: 2mm; }
+  .fstep { display: flex; align-items: center; gap: 4mm; }
+  .fstep .lbl { width: 45mm; font-size: 9pt; color: var(--muted); }
+  .fstep .track { flex: 1; }
+  .fstep .fill { height: 7mm; border-radius: 1.8mm; display: flex; align-items: center; padding-left: 3mm; color: #fff; font-size: 9.5pt; font-weight: 600; }
+  .fstep .pct { width: 18mm; text-align: right; font-size: 9pt; color: var(--muted); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .card { border: 1px solid var(--line); border-radius: 3mm; padding: 5mm; }
+  .card h3 { font-size: 10.5pt; font-weight: 700; margin-bottom: 3.5mm; }
+  .rows div { display: flex; justify-content: space-between; font-size: 9pt; padding: 1.8mm 0; border-bottom: 1px solid var(--line); }
+  .rows div:last-child { border-bottom: 0; }
+  .rows span { color: var(--muted); }
+  .rows b { font-weight: 600; }
+
+  .hbar { margin-bottom: 2.6mm; }
+  .hbar .t { display: flex; justify-content: space-between; font-size: 8.6pt; margin-bottom: 1mm; }
+  .hbar .t span:last-child { color: var(--muted); }
+  .hbar .t b { color: var(--ink); }
+  .hbar .tr { height: 2.2mm; border-radius: 1.1mm; background: #F0F3F1; overflow: hidden; }
+  .hbar .tr i { display: block; height: 100%; border-radius: 1.1mm; }
+
+  .cost { display: flex; gap: 6mm; align-items: flex-end; height: 40mm; padding-top: 2mm; }
+  .cost .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .cost .col .b { width: 100%; border-radius: 2mm 2mm 0 0; }
+  .cost .col .val { font-size: 12pt; font-weight: 700; margin-bottom: 1.5mm; }
+  .cost .col .cap { font-size: 8pt; color: var(--muted); margin-top: 1.5mm; text-align: center; }
+  .x { font-size: 22pt; font-weight: 700; color: var(--green); line-height: 1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  th { text-align: left; font-size: 7.6pt; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; padding: 2.4mm 2.5mm; border-bottom: 1.5px solid var(--ink); }
+  td { padding: 2.6mm 2.5mm; border-bottom: 1px solid var(--line); }
+  td.r, th.r { text-align: right; }
+  .pill { display: inline-block; padding: .6mm 2.4mm; border-radius: 5mm; font-size: 7.8pt; font-weight: 600; }
+  .pill.ok { background: var(--sage-l); color: var(--green); }
+  .pill.warn { background: #FDF3E1; color: #9A6510; }
+
+  .rec { display: flex; gap: 4.5mm; padding: 3.2mm 0; border-bottom: 1px solid var(--line); }
+  .rec:last-child { border-bottom: 0; }
+  .rec .n { flex: 0 0 8mm; height: 8mm; border-radius: 50%; background: var(--green); color: #fff; font-weight: 700; font-size: 10pt; display: flex; align-items: center; justify-content: center; }
+  .rec h4 { font-size: 10.5pt; font-weight: 700; }
+  .rec p { font-size: 9pt; color: #33463F; line-height: 1.5; margin-top: 1.2mm; }
+  .rec .eff { display: inline-block; margin-top: 2mm; font-size: 8.3pt; font-weight: 600; color: var(--green); background: var(--sage-l); padding: .8mm 3mm; border-radius: 5mm; }
+
+  .legend { display: flex; gap: 5mm; font-size: 8pt; color: var(--muted); margin-top: 2mm; }
+  .legend i { display: inline-block; width: 2.6mm; height: 2.6mm; border-radius: .6mm; margin-right: 1.4mm; vertical-align: -.3mm; }
+
+  .footer { position: absolute; left: 16mm; right: 16mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 7.8pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 3mm; }
+  .contact { display: flex; gap: 4mm; align-items: center; background: var(--ink); color: #fff; border-radius: 3mm; padding: 5mm 6mm; }
+  .contact .av { width: 11mm; height: 11mm; border-radius: 50%; background: var(--sage); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .contact .t { font-size: 8pt; color: rgba(255,255,255,.65); }
+  .contact b { font-size: 10.5pt; }
+  .contact .c { margin-left: auto; text-align: right; font-size: 9pt; line-height: 1.6; color: rgba(255,255,255,.85); }
+</style>
+</head>
+<body>
+
+<!-- ───────────── СТРАНИЦА 1 ───────────── -->
+<section class="page">
+  <div class="hero">
+    <img src="LOGO_WHITE" alt="O'LINE">
+    <p class="eyebrow">Отчёт по кампании · Нейроассистент на исходящие звонки</p>
+    <h1>Реактивация спящих клиентов</h1>
+    <p class="sub">Промежуточные итоги: 3 недели из 4 · данные на 13 ноября 2026</p>
+    <div class="meta">
+      <div>Клиент<b>ООО «Ромашка»</b></div>
+      <div>Сроки кампании<b>23.10.2026 — 20.11.2026</b></div>
+      <div>База<b class="num">20 000 контактов</b></div>
+      <div>Договор<b>№ 09-14/2026</b></div>
+    </div>
+  </div>
+
+  <div class="pad">
+    <div class="section">
+      <div class="progress-row">
+        <span>Обработано <b class="num">14 300</b> из <span class="num">20 000</span> контактов базы</span>
+        <b class="num" style="color:var(--green);font-size:13pt">72%</b>
+      </div>
+      <div class="bar"><i style="width:71.5%"></i></div>
+      <span class="status">✓ Идём по плану — оставшиеся 5 700 контактов пройдём за 7 дней</span>
+    </div>
+
+    <div class="section kpis">
+      <div class="kpi accent"><p class="l">Согласились на предложение</p><p class="v num">1 830</p><p class="h">20% от всех разговоров</p></div>
+      <div class="kpi"><p class="l">Стоимость одного согласия</p><p class="v num green">108 ₽</p><p class="h">у операторов — 850 ₽</p></div>
+      <div class="kpi"><p class="l">Дозвон</p><p class="v num">64%</p><p class="h">9 150 разговоров с клиентами</p></div>
+      <div class="kpi"><p class="l">Темп</p><p class="v num">850</p><p class="h">контактов в день · как 13 операторов</p></div>
+      <div class="kpi"><p class="l">Без оператора</p><p class="v num">93%</p><p class="h">разговоров довёл до конца сам</p></div>
+      <div class="kpi"><p class="l">К оплате за кампанию</p><p class="v num">197 640 ₽</p><p class="h">14 640 мин × 13,5 ₽</p></div>
+    </div>
+
+    <div class="section insight">
+      <p class="eyebrow">Главное за период</p>
+      За 3 недели нейроассистент обработал 14 300 контактов из 20 000 — по 850 в день, столько же сделала бы команда из 13 операторов.
+      На предложение согласились <b>1 830 клиентов</b>. Одно согласие обходится в <b>108 ₽ — в 7,9 раза дешевле</b>, чем в операторской кампании.
+      660 готовых к заказу клиентов нейроассистент сразу передал вашим менеджерам.
+    </div>
+
+    <div class="section">
+      <h2>Воронка кампании</h2>
+      <div class="funnel">
+        <div class="fstep"><span class="lbl">Взято в обзвон</span><div class="track"><div class="fill num" style="width:100%;background:var(--ink)">16 700</div></div><span class="pct">100%</span></div>
+        <div class="fstep"><span class="lbl">Обработано (есть итог)</span><div class="track"><div class="fill num" style="width:85.6%;background:var(--green)">14 300</div></div><span class="pct">86%</span></div>
+        <div class="fstep"><span class="lbl">Дозвонились</span><div class="track"><div class="fill num" style="width:54.8%;background:#3F7A4E">9 150</div></div><span class="pct">64%</span></div>
+        <div class="fstep"><span class="lbl">Согласились</span><div class="track"><div class="fill num" style="width:11%;min-width:20mm;background:var(--sage)">1 830</div></div><span class="pct">20%</span></div>
+      </div>
+      <p class="note" style="margin-top:2.5mm">2 400 контактов ещё в работе (до 3 попыток). Дозвон — от обработанных, согласие — от разговоров.</p>
+    </div>
+  </div>
+
+  <div class="footer"><span>O'LINE · Отчёт по кампании «Реактивация спящих клиентов»</span><span>1 / 3</span></div>
+</section>
+
+<!-- ───────────── СТРАНИЦА 2 ───────────── -->
+<section class="page">
+  <div class="mini-head"><img src="LOGO_COLOR" alt="O'LINE"><span>Реактивация спящих клиентов · 13.11.2026</span></div>
+
+  <div class="pad">
+    <div class="section two">
+      <div class="card">
+        <h3>Работа нейроассистента</h3>
+        <div class="rows">
+          <div><span>Довёл разговор до конца сам</span><b class="num">93%</b></div>
+          <div><span>Передал менеджеру готовых к заказу</span><b class="num">660</b></div>
+          <div><span>Разговоров одновременно</span><b class="num">до 30</b></div>
+          <div><span>Понял ответ клиента с первого раза</span><b class="num">96%</b></div>
+          <div><span>Сам назначил повторный звонок</span><b class="num">640</b></div>
+          <div><span>Среднее время разговора</span><b class="num">1 мин 36 сек</b></div>
+          <div><span>Попыток на один контакт</span><b class="num">1,7</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Сколько стоит одно согласие</h3>
+        <div class="cost">
+          <div class="col"><span class="val num">850 ₽</span><div class="b" style="height:100%;background:#C9D3CE"></div><span class="cap">Операторы</span></div>
+          <div class="col" style="justify-content:center;flex:0 0 22mm"><span class="x">×7,9</span><span class="cap">дешевле</span></div>
+          <div class="col"><span class="val num" style="color:var(--green)">108 ₽</span><div class="b" style="height:12.7%;background:var(--sage)"></div><span class="cap">Нейроассистент</span></div>
+        </div>
+        <p class="note" style="margin-top:4mm">Оплачиваются только минуты разговора — 13,5 ₽/мин. Гудки, недозвоны и автоответчики не оплачиваются.</p>
+      </div>
+    </div>
+
+    <div class="section two">
+      <div>
+        <h2>Чем закончились разговоры</h2>
+        <div class="hbar"><div class="t"><span>Согласие — промокод в SMS</span><span><b class="num">1 170</b> · 12,8%</span></div><div class="tr"><i style="width:21.4%;background:var(--sage)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Передан менеджеру — готов к заказу</span><span><b class="num">660</b> · 7,2%</span></div><div class="tr"><i style="width:12%;background:var(--green)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Попросил перезвонить</span><span><b class="num">640</b> · 7,0%</span></div><div class="tr"><i style="width:11.7%;background:var(--amber)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Отказ</span><span><b class="num">5 480</b> · 59,9%</span></div><div class="tr"><i style="width:100%;background:var(--rose)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Попросил не звонить</span><span><b class="num">780</b> · 8,5%</span></div><div class="tr"><i style="width:14.2%;background:#A9B6B0"></i></div></div>
+        <div class="hbar"><div class="t"><span>Номер сменил владельца</span><span><b class="num">420</b> · 4,6%</span></div><div class="tr"><i style="width:7.7%;background:#A9B6B0"></i></div></div>
+      </div>
+      <div>
+        <h2>Причины отказов</h2>
+        <div class="hbar"><div class="t"><span>Уже покупаю в другом месте</span><span><b class="num">1 640</b> · 30%</span></div><div class="tr"><i style="width:100%;background:var(--rose)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Не интересно</span><span><b class="num">1 480</b> · 27%</span></div><div class="tr"><i style="width:90.2%;background:var(--rose)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Дорого</span><span><b class="num">1 100</b> · 20%</span></div><div class="tr"><i style="width:67%;background:var(--rose)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Нет времени говорить</span><span><b class="num">820</b> · 15%</span></div><div class="tr"><i style="width:50%;background:var(--rose)"></i></div></div>
+        <div class="hbar"><div class="t"><span>Прочее</span><span><b class="num">440</b> · 8%</span></div><div class="tr"><i style="width:26.8%;background:var(--rose)"></i></div></div>
+        <p class="note" style="margin-top:2mm">Всего 5 480 отказов, доля — от всех отказов.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Динамика по неделям</h2>
+      <svg viewBox="0 0 640 215" width="100%" style="display:block">
+        <g font-family="Inter, Segoe UI, Arial" font-size="10" fill="#5E6F68">
+          <line x1="40" y1="20" x2="630" y2="20" stroke="#EEF1EF"/>
+          <line x1="40" y1="70" x2="630" y2="70" stroke="#EEF1EF"/>
+          <line x1="40" y1="120" x2="630" y2="120" stroke="#EEF1EF"/>
+          <line x1="40" y1="170" x2="630" y2="170" stroke="#C9D3CE"/>
+          <text x="32" y="23" text-anchor="end">3 500</text>
+          <text x="32" y="73" text-anchor="end">2 300</text>
+          <text x="32" y="123" text-anchor="end">1 200</text>
+          <text x="32" y="173" text-anchor="end">0</text>
+        </g>
+        <!-- шкала: 0..3500 → 150px (y=170..20) -->
+        <g font-family="Inter, Segoe UI, Arial" font-size="10" text-anchor="middle">
+          <!-- Нед 1 -->
+          <rect x="78" y="52.1" width="44" height="117.9" rx="4" fill="#7CB342"/>
+          <rect x="126" y="147.7" width="44" height="22.3" rx="4" fill="#1F5240"/>
+          <text x="100" y="46" fill="#0F2A22" font-weight="600">2 750</text>
+          <text x="148" y="141" fill="#0F2A22" font-weight="600">520</text>
+          <text x="124" y="188" fill="#5E6F68">Нед 1 · 23–29 окт</text>
+          <!-- Нед 2 -->
+          <rect x="223" y="35" width="44" height="135" rx="4" fill="#7CB342"/>
+          <rect x="271" y="142.6" width="44" height="27.4" rx="4" fill="#1F5240"/>
+          <text x="245" y="29" fill="#0F2A22" font-weight="600">3 150</text>
+          <text x="293" y="136" fill="#0F2A22" font-weight="600">640</text>
+          <text x="269" y="188" fill="#5E6F68">Нед 2 · 30 окт–5 ноя</text>
+          <!-- Нед 3 -->
+          <rect x="368" y="30.7" width="44" height="139.3" rx="4" fill="#7CB342"/>
+          <rect x="416" y="141.3" width="44" height="28.7" rx="4" fill="#1F5240"/>
+          <text x="390" y="25" fill="#0F2A22" font-weight="600">3 250</text>
+          <text x="438" y="135" fill="#0F2A22" font-weight="600">670</text>
+          <text x="414" y="188" fill="#5E6F68">Нед 3 · 6–12 ноя</text>
+          <!-- Нед 4 (прогноз) -->
+          <rect x="513" y="35" width="44" height="135" rx="4" fill="#7CB342" fill-opacity=".28" stroke="#7CB342" stroke-dasharray="4 3"/>
+          <rect x="561" y="142.1" width="44" height="27.9" rx="4" fill="#1F5240" fill-opacity=".22" stroke="#1F5240" stroke-dasharray="4 3"/>
+          <text x="535" y="29" fill="#5E6F68" font-weight="600">≈3 150</text>
+          <text x="583" y="136" fill="#5E6F68" font-weight="600">≈650</text>
+          <text x="559" y="188" fill="#5E6F68">Нед 4 · 13–20 ноя · прогноз</text>
+        </g>
+      </svg>
+      <div class="legend"><span><i style="background:var(--sage)"></i>Разговоров</span><span><i style="background:var(--green)"></i>Согласий</span><span><i style="border:1px dashed var(--muted)"></i>Прогноз</span></div>
+    </div>
+  </div>
+
+  <div class="footer"><span>O'LINE · Отчёт по кампании «Реактивация спящих клиентов»</span><span>2 / 3</span></div>
+</section>
+
+<!-- ───────────── СТРАНИЦА 3 ───────────── -->
+<section class="page">
+  <div class="mini-head"><img src="LOGO_COLOR" alt="O'LINE"><span>Реактивация спящих клиентов · 13.11.2026</span></div>
+
+  <div class="pad">
+    <div class="section">
+      <h2>Результат по сегментам базы</h2>
+      <table>
+        <thead><tr><th>Сегмент</th><th class="r">Обработано</th><th class="r">Согласий</th><th class="r">Конверсия</th><th class="r">Цена согласия</th><th></th></tr></thead>
+        <tbody class="num">
+          <tr><td>Без заказа 3–6 месяцев</td><td class="r">6 200</td><td class="r">1 080</td><td class="r">27%</td><td class="r">82 ₽</td><td class="r"><span class="pill ok">лучший</span></td></tr>
+          <tr><td>Без заказа 6–12 месяцев</td><td class="r">5 100</td><td class="r">560</td><td class="r">17%</td><td class="r">125 ₽</td><td class="r"><span class="pill ok">в норме</span></td></tr>
+          <tr><td>Без заказа больше года</td><td class="r">3 000</td><td class="r">190</td><td class="r">9%</td><td class="r">236 ₽</td><td class="r"><span class="pill warn">дорого</span></td></tr>
+          <tr><td><b>Итого</b></td><td class="r"><b>14 300</b></td><td class="r"><b>1 830</b></td><td class="r"><b>20%</b></td><td class="r"><b>108 ₽</b></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section two">
+      <div class="card">
+        <h3>Прогноз до конца кампании</h3>
+        <div class="rows">
+          <div><span>Пройдём всю базу</span><b>за 7 дней</b></div>
+          <div><span>Согласий за всю кампанию</span><b class="num">≈ 2 480</b></div>
+          <div><span>Стоимость всей кампании</span><b class="num">≈ 266 000 ₽</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Сравнение с операторской кампанией</h3>
+        <div class="rows">
+          <div><span>Контактов в день</span><b class="num">260 → 850</b></div>
+          <div><span>Дозвон</span><b class="num">68% → 64%</b></div>
+          <div><span>Конверсия</span><b class="num">23,4% → 20,0%</b></div>
+          <div><span>Цена целевого действия</span><b class="num" style="color:var(--green)">850 ₽ → 108 ₽</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Рекомендации</h2>
+      <div class="rec"><span class="n">1</span><div>
+        <h4>Звонить чаще в 18:00–21:00</h4>
+        <p>Вечером дозвон 70–74% против 58–64% в первой половине дня: спящие клиенты днём на работе. Если перенести треть звонков на вечер, за последнюю неделю получим примерно на 120 согласий больше — без дополнительных затрат.</p>
+        <span class="eff">+120 согласий</span></div></div>
+      <div class="rec"><span class="n">2</span><div>
+        <h4>Новый ответ на «уже покупаю в другом месте»</h4>
+        <p>Это самая частая причина отказа — 30% всех отказов. Если добавить в сценарий двойные баллы на первый заказ после перерыва, по опыту похожих кампаний часть таких клиентов согласится. Сценарий обновим за 1 день.</p>
+        <span class="eff">+200 согласий</span></div></div>
+      <div class="rec"><span class="n">3</span><div>
+        <h4>Отдельное предложение для тех, кто не заказывал больше года</h4>
+        <p>Здесь конверсия 9% и согласие стоит 236 ₽ — в 2,9 раза дороже, чем у клиентов с перерывом 3–6 месяцев. Им лучше подходит скидка на возвращение, а не напоминание о прошлых покупках.</p>
+        <span class="eff">цена согласия ниже на 40%</span></div></div>
+    </div>
+
+    <div class="section contact">
+      <span class="av">СН</span>
+      <div><p class="t">Ваш менеджер</p><b>Светлана Носенко</b></div>
+      <div class="c">+7 (495) 120-45-83<br>s.nosenko@oline.ru</div>
+    </div>
+  </div>
+
+  <div class="footer"><span>O'LINE · Отчёт по кампании «Реактивация спящих клиентов»</span><span>3 / 3</span></div>
+</section>
+</body>
+</html>

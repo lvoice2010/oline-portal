@@ -18,6 +18,13 @@ import {
 import { cn } from "@/lib/utils";
 import { DIALOG_CHANNEL_LABEL, type Dialog } from "@/lib/mock-data";
 
+export const OUTCOME_BADGE: Record<NonNullable<Dialog["outbound"]>["outcomeTone"], string> = {
+  target: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  warm: "border-amber-200 bg-amber-50 text-amber-700",
+  refuse: "border-rose-200 bg-rose-50 text-rose-700",
+  neutral: "border-navy/15 bg-navy-50 text-navy/70",
+};
+
 function fmtTime(sec: number) {
   if (sec <= 0) return "00:00";
   const m = Math.floor(sec / 60);
@@ -180,6 +187,7 @@ export function DialogDetailModal({
   }, [open, onClose]);
 
   if (!open || !dialog) return null;
+  const ob = dialog.outbound;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -193,12 +201,16 @@ export function DialogDetailModal({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-semibold text-navy">
-                Просмотр диалога · {dialog.date} {dialog.time}
+                {ob ? "Исходящий звонок" : "Просмотр диалога"} · {dialog.date} {dialog.time}
               </h2>
               <span className="rounded-full border border-navy/15 bg-navy-50 px-2.5 py-0.5 text-[11px] font-medium text-navy/75">
-                {DIALOG_CHANNEL_LABEL[dialog.channel]}
+                {ob ? ob.contactNumber : DIALOG_CHANNEL_LABEL[dialog.channel]}
               </span>
-              {dialog.escalated ? (
+              {ob ? (
+                <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-medium", OUTCOME_BADGE[ob.outcomeTone])}>
+                  {ob.outcome}
+                </span>
+              ) : dialog.escalated ? (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
                   Эскалирован на оператора
                 </span>
@@ -209,7 +221,7 @@ export function DialogDetailModal({
               )}
             </div>
             <p className="mt-0.5 text-[11px] text-navy/45">
-              Тема «{dialog.topic}»
+              {ob ? `${ob.segment} · ${dialog.topic}` : `Тема «${dialog.topic}»`}
             </p>
           </div>
           <button
@@ -228,8 +240,23 @@ export function DialogDetailModal({
             <div className="space-y-4 lg:col-span-1">
               <div>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
-                  Информация о диалоге
+                  {ob ? "Информация о звонке" : "Информация о диалоге"}
                 </p>
+                {ob ? (
+                <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
+                  <UidRow uid={dialog.id} label="UID звонка" />
+                  <Row label="Номер клиента" value={ob.contactNumber} />
+                  <Row label="Сегмент базы" value={ob.segment} />
+                  <Row label="Попытка дозвона" value={`${ob.attempt}-я`} />
+                  <Row label="Длительность" value={fmtDuration(dialog.durationSec)} />
+                  <Row label="Итог" value={ob.outcome} />
+                  <Row
+                    label="Менеджер"
+                    value={dialog.escalated ? "Подключён к разговору" : "Не потребовался"}
+                  />
+                  <Row label="Запись" value="Есть" />
+                </div>
+                ) : (
                 <div className="overflow-hidden rounded-card border border-navy/[0.06] bg-white">
                   <UidRow uid={dialog.id} label="UID диалога" />
                   <Row label="Канал" value={DIALOG_CHANNEL_LABEL[dialog.channel]} />
@@ -247,6 +274,7 @@ export function DialogDetailModal({
                     value={dialog.hasRecording ? "Есть" : "Только стенограмма"}
                   />
                 </div>
+                )}
               </div>
             </div>
 
@@ -255,11 +283,11 @@ export function DialogDetailModal({
               {dialog.ai ? (
                 <>
                   <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-copper">
-                    <Sparkles size={12} /> ИИ-карточка диалога
+                    <Sparkles size={12} /> {ob ? "ИИ-карточка звонка" : "ИИ-карточка диалога"}
                   </p>
                   <div className="rounded-card border border-copper/30 bg-copper/[0.04] p-4">
                     <p className="mb-1 text-[11px] uppercase tracking-wider text-navy/55">
-                      Суть обращения
+                      {ob ? "Суть разговора" : "Суть обращения"}
                     </p>
                     <p className="text-sm leading-relaxed text-navy">
                       {dialog.ai.summary}
@@ -304,7 +332,7 @@ export function DialogDetailModal({
                       m.speaker === "bot"
                         ? { label: "Нейроассистент", Icon: Bot }
                         : m.speaker === "agent"
-                        ? { label: "Оператор", Icon: Headset }
+                        ? { label: ob ? "Менеджер" : "Оператор", Icon: Headset }
                         : { label: "Клиент", Icon: User2 };
                     return (
                       <div

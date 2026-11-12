@@ -48,6 +48,7 @@ import { OutboundReportTab } from "@/components/outbound-report-tab";
 import { OutboundAnalyticsTab } from "@/components/outbound-analytics-tab";
 import { OutboundCallsTab } from "@/components/outbound-calls-tab";
 import { ServiceScriptTab } from "@/components/service-script-tab";
+import { OutboundAiDialogsTab } from "@/components/outbound-ai-dialogs-tab";
 
 const TAB_REPORTS = { id: "reports", label: "Отчёты", icon: BarChart3 } as const;
 const TAB_ANALYTICS = { id: "analytics", label: "Аналитика", icon: LineChart } as const;
@@ -70,9 +71,9 @@ function getTabsForService(serviceId: string) {
   if (serviceId === "chatbot") {
     return [TAB_REPORTS, TAB_ANALYTICS, TAB_KB, TAB_DIALOGS];
   }
-  // Нейроассистент на исходящие — пока только отчёт по кампании
+  // Нейроассистент на исходящие — отчёт по кампании и журнал разговоров
   if (serviceId === "outbound-ai") {
-    return [TAB_REPORTS];
+    return [TAB_REPORTS, TAB_DIALOGS];
   }
   // Голосовые линии: добавляем «Скрипт» между аналитикой и вызовами
   return [TAB_REPORTS, TAB_ANALYTICS, TAB_SCRIPT, TAB_CALLS];
@@ -353,7 +354,12 @@ export default function ServiceDetailPage({
         ) : (
           <CallsTab serviceId={service.id} />
         ))}
-      {tab === "dialogs" && <DialogsTab serviceId={service.id} />}
+      {tab === "dialogs" &&
+        (service.id === "outbound-ai" ? (
+          <OutboundAiDialogsTab />
+        ) : (
+          <DialogsTab serviceId={service.id} />
+        ))}
       {tab === "reports" &&
         (OUTBOUND_SERVICES.has(service.id) ? (
           <OutboundReportTab serviceId={service.id} />
@@ -508,6 +514,27 @@ function PackageUsageBlock({
 
 // ── Блок «Отчёты» в шапке услуги (рядом с менеджером + расходом) ─
 function ReportsActionsBlock({ serviceId }: { serviceId: string }) {
+  // Нейроассистент на исходящие: отчёт по текущей кампании (PDF)
+  if (serviceId === "outbound-ai") {
+    return (
+      <div className="flex w-[220px] flex-col gap-1.5 rounded-xl border border-navy/[0.06] bg-white p-2 shadow-soft">
+        <p className="px-1 pt-0.5 text-[10px] uppercase tracking-wider text-navy/40">
+          Отчёты
+        </p>
+        <a
+          href="/reports/neuro-outbound-campaign.pdf"
+          download="Отчёт_Реактивация_спящих_клиентов.pdf"
+          title="Скачать PDF-отчёт по кампании «Реактивация спящих клиентов»"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-navy-light"
+        >
+          <Download size={13} /> Скачать отчёт
+        </a>
+        <p className="px-1 text-[10px] leading-snug text-navy/45">
+          PDF по кампании «Реактивация спящих клиентов»
+        </p>
+      </div>
+    );
+  }
   const serviceReports = archivedReports
     .filter((r) => r.serviceId === serviceId)
     .sort((a, b) => {
