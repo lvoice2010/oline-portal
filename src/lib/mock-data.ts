@@ -1266,8 +1266,8 @@ export const archivedReports: ArchivedReport[] = [
 
 export const documents: DocumentItem[] = [
   // Апрель 2026 — текущий период оплаты
-  { date: "30.04.2026", number: "СЧ-2026-04-127", type: "Счёт", period: "Апрель 2026", amount: "487 200 ₽", status: "К оплате", fileSizeKb: 218 },
-  { date: "30.04.2026", number: "АКТ-2026-04-127", type: "Акт", period: "Апрель 2026", amount: "487 200 ₽", status: "Ожидает подписи", fileSizeKb: 195 },
+  { date: "30.04.2026", number: "СЧ-2026-04-127", type: "Счёт", period: "Апрель 2026", amount: "68 200 ₽", status: "К оплате", fileSizeKb: 218 },
+  { date: "30.04.2026", number: "АКТ-2026-04-127", type: "Акт", period: "Апрель 2026", amount: "68 200 ₽", status: "Ожидает подписи", fileSizeKb: 195 },
   // Март 2026 — закрыт
   { date: "31.03.2026", number: "СЧ-2026-03-098", type: "Счёт", period: "Март 2026", amount: "452 800 ₽", status: "Оплачен", fileSizeKb: 214 },
   { date: "31.03.2026", number: "АКТ-2026-03-098", type: "Акт", period: "Март 2026", amount: "452 800 ₽", status: "Подписан", fileSizeKb: 192 },
