@@ -25,7 +25,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { shiftDateString, monthShift, shiftQuarterString } from "@/lib/demo-clock";
+import { shiftDateString, monthShift, shiftQuarterString, demoUsage } from "@/lib/demo-clock";
 import {
   connectedServices,
   calls,
@@ -49,6 +49,7 @@ import { OutboundAnalyticsTab } from "@/components/outbound-analytics-tab";
 import { OutboundCallsTab } from "@/components/outbound-calls-tab";
 import { ServiceScriptTab } from "@/components/service-script-tab";
 import { OutboundAiDialogsTab } from "@/components/outbound-ai-dialogs-tab";
+import { buildChatbotDialogs } from "@/lib/chatbot-dialogs";
 
 const TAB_REPORTS = { id: "reports", label: "Отчёты", icon: BarChart3 } as const;
 const TAB_ANALYTICS = { id: "analytics", label: "Аналитика", icon: LineChart } as const;
@@ -233,7 +234,7 @@ export default function ServiceDetailPage({
 
             {service.usage && (
               <div className="w-[260px] rounded-xl border border-navy/[0.06] bg-white p-3 shadow-soft">
-                <PackageUsageBlock usage={service.usage} compact />
+                <PackageUsageBlock usage={demoUsage(service.usage)} compact />
               </div>
             )}
 
@@ -1020,8 +1021,12 @@ function DialogsTab({ serviceId }: { serviceId: string }) {
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<Dialog | null>(null);
 
-  const serviceDialogs = dialogs.filter((d) => d.serviceId === serviceId);
   const now = new Date();
+  // Нейроассистент на входящую — живая лента от сегодняшней даты
+  const serviceDialogs =
+    serviceId === "chatbot"
+      ? buildChatbotDialogs(now)
+      : dialogs.filter((d) => d.serviceId === serviceId);
   const days = period === "today" ? 1 : period === "week" ? 7 : period === "month" ? 31 : null;
   const cutoff = days !== null ? new Date(now.getTime() - days * 86400000) : null;
   const fromDate = period === "custom" && customFrom ? new Date(customFrom) : null;
@@ -1051,16 +1056,25 @@ function DialogsTab({ serviceId }: { serviceId: string }) {
     return true;
   });
 
-  const total = inPeriod.length;
-  const aiHandled = inPeriod.filter((d) => !d.escalated).length;
-  const escalated = inPeriod.filter((d) => d.escalated).length;
-  // Разбивка для биллинга: текст — поштучно, голос — по минутам
-  const textDialogs = inPeriod.filter((d) => d.channel !== "phone");
-  const voiceDialogs = inPeriod.filter((d) => d.channel === "phone");
-  const textCount = textDialogs.length;
-  const voiceMinutes = Math.round(
-    voiceDialogs.reduce((s, d) => s + d.durationSec, 0) / 60
-  );
+  // Сводные плитки — из тех же агрегатов, что и отчёт за период («Входящие»,
+  // «переводы на оператора»), чтобы цифры бились. Таблица ниже — выборка
+  // последних диалогов. Для произвольного периода — по выборке.
+  const dReport = serviceReports[serviceId] ? demoizeReport(serviceReports[serviceId]) : null;
+  const snap =
+    period === "custom"
+      ? undefined
+      : dReport?.kpisByPeriod?.[period as keyof NonNullable<typeof dReport.kpisByPeriod>];
+  const snapTotal = snap?.kpis.find((k) => k.label === "Входящие")?.value;
+  const total = snapTotal ? Number(snapTotal.replace(/[^\d]/g, "")) : inPeriod.length;
+  const escalated = snap ? snap.transfers.total : inPeriod.filter((d) => d.escalated).length;
+  const aiHandled = total - escalated;
+  // Биллинг: текст — поштучно, голос — по минутам (≈5% диалогов голосом, 1,5 мин)
+  const sampleVoice = inPeriod.filter((d) => d.channel === "phone");
+  const voiceCount = snap ? Math.round(total * 0.05) : sampleVoice.length;
+  const textCount = total - voiceCount;
+  const voiceMinutes = snap
+    ? Math.round(voiceCount * 1.5)
+    : Math.round(sampleVoice.reduce((s, d) => s + d.durationSec, 0) / 60);
 
   if (serviceDialogs.length === 0) {
     return (
@@ -1075,11 +1089,11 @@ function DialogsTab({ serviceId }: { serviceId: string }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="p-4">
           <p className="text-xs text-navy/55">Всего диалогов</p>
-          <p className="mt-1 text-2xl font-semibold text-navy">{total}</p>
+          <p className="mt-1 text-2xl font-semibold text-navy">{total.toLocaleString("ru-RU")}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Закрыто ИИ</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-600">{aiHandled}</p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-600">{aiHandled.toLocaleString("ru-RU")}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Эскалаций</p>
@@ -1089,19 +1103,19 @@ function DialogsTab({ serviceId }: { serviceId: string }) {
               escalated > 0 ? "text-amber-600" : "text-navy"
             )}
           >
-            {escalated}
+            {escalated.toLocaleString("ru-RU")}
           </p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Текстовых диалогов</p>
           <p className="mt-1 text-2xl font-semibold text-navy tabular-nums">
-            {textCount}
+            {textCount.toLocaleString("ru-RU")}
           </p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-navy/55">Голосовых минут</p>
           <p className="mt-1 text-2xl font-semibold text-navy tabular-nums">
-            {voiceMinutes}
+            {voiceMinutes.toLocaleString("ru-RU")}
           </p>
         </Card>
       </div>
@@ -1330,7 +1344,8 @@ function DialogsTab({ serviceId }: { serviceId: string }) {
 
         <div className="flex items-center justify-between border-t border-navy/[0.06] bg-white px-4 py-3 text-xs text-navy/55">
           <span>
-            Показано {filtered.length} из {total} диалогов за период
+            В таблице — последние диалоги: {filtered.length} из{" "}
+            {total.toLocaleString("ru-RU")} за период
           </span>
         </div>
       </Card>

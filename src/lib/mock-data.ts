@@ -55,6 +55,8 @@ export type ConnectedService = {
     };
     // примерная накопленная стоимость (когда rate один невозможно — для mixedRates)
     approxCost?: number;
+    // used/approxCost заданы за первые N дней месяца — масштабируются к сегодняшнему числу
+    demoMtdDays?: number;
   };
   // Дополнительные мини-метрики (ASA, SLA, дозвон и т.п.)
   extraMetrics?: {
@@ -341,6 +343,9 @@ export const connectedServices: ConnectedService[] = [
       },
       // ≈ 228 текст × 13 + 12 голос × 1,5 мин × 13,5 ≈ 3 200 ₽
       approxCost: 3200,
+      // 240 диалогов / 3 200 ₽ — срез за первые 4 дня месяца; на экране
+      // масштабируем к сегодняшнему числу (как «Месяц» в отчёте).
+      demoMtdDays: 4,
     },
     extraMetrics: [
       {

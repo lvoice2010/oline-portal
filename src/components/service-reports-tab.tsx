@@ -44,6 +44,7 @@ import {
   shiftCallsToNow,
 } from "@/lib/demo-clock";
 import { AiTopicsBreakdown } from "@/components/ai-topics-breakdown";
+import { buildChatbotDialogs } from "@/lib/chatbot-dialogs";
 
 // Демо-«сегодня»: сдвигаем все даты в отчёте от реальной даты, а метки
 // «сегодня/вчера» подставляем точной датой.
@@ -1028,7 +1029,7 @@ export function ServiceReportsTab({ serviceId }: { serviceId: string }) {
           У блока собственный селектор периода, не привязан к шапке услуги. */}
       {isChatbot ? (
         <AiTopicsBreakdown
-          items={dialogs.filter((d) => d.serviceId === serviceId)}
+          items={buildChatbotDialogs()}
           itemNoun="диалогов"
           getDate={(it) => it.date}
           getCategory={(it) => it.ai?.category}

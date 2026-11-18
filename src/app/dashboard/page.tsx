@@ -26,7 +26,7 @@ import {
   type ServiceStage,
   type ConnectedService,
 } from "@/lib/mock-data";
-import { demoizeDeep, monthShift } from "@/lib/demo-clock";
+import { demoizeDeep, monthShift, demoUsage } from "@/lib/demo-clock";
 
 const alertIcon = { warning: AlertTriangle, info: Info, success: CheckCircle2 };
 
@@ -166,7 +166,7 @@ function ServiceCardBody({ s }: { s: ConnectedService }) {
   if (s.stage === "active") {
     return (
       <>
-        {s.usage && <UsageBar usage={s.usage} />}
+        {s.usage && <UsageBar usage={demoUsage(s.usage)} />}
         {/* Спейсер выравнивает нижнюю половину карточек на одной высоте, */}
         {/* независимо от того, есть ли наверху прогресс-бар расхода. */}
         <div className="flex-1" />

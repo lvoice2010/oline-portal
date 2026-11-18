@@ -241,3 +241,18 @@ export function outboundCampaignDates(
     weekLabels,
   };
 }
+
+// Расход «с начала месяца», заданный в данных за первые N дней (demoMtdDays),
+// пересчитываем к сегодняшнему числу — так же, как «Месяц» в отчёте.
+export function demoUsage<U extends { used: number; approxCost?: number; demoMtdDays?: number }>(
+  usage: U,
+  now: Date = new Date()
+): U {
+  if (!usage.demoMtdDays) return usage;
+  const k = now.getDate() / usage.demoMtdDays;
+  return {
+    ...usage,
+    used: Math.round(usage.used * k),
+    approxCost: usage.approxCost ? Math.round((usage.approxCost * k) / 10) * 10 : usage.approxCost,
+  };
+}
