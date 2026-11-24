@@ -7,7 +7,9 @@ import {
   Sparkles,
   User2,
   Headphones,
+  Headset,
 } from "lucide-react";
+import { outboundTranscript } from "@/lib/outbound-transcripts";
 import { cn } from "@/lib/utils";
 import {
   OUTBOUND_OUTCOME_REASON_LABEL,
@@ -89,6 +91,7 @@ export function OutboundCallDetailModal({
   if (!open || !call) return null;
 
   const hasRecording = call.durationSec >= 20; // короткие гудки запись не делают
+  const transcript = outboundTranscript(call);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -180,6 +183,47 @@ export function OutboundCallDetailModal({
                   <AudioPlayerStub duration={call.durationSec} uid={call.uid} />
                 </div>
               )}
+
+              {/* Стенограмма разговора */}
+            <div>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                Стенограмма
+              </p>
+              {transcript && transcript.length > 0 ? (
+                <div className="max-h-[40vh] space-y-2 overflow-y-auto rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
+                  {transcript.map((m, i) => {
+                    const isClient = m.speaker === "client";
+                    return (
+                      <div
+                        key={i}
+                        className={cn("flex flex-col gap-0.5", isClient ? "items-end" : "items-start")}
+                      >
+                        <div
+                          className={cn(
+                            "max-w-[80%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                            isClient
+                              ? "rounded-br-sm bg-copper text-white"
+                              : "rounded-bl-sm border border-amber-200 bg-amber-50 text-navy"
+                          )}
+                        >
+                          {m.text}
+                        </div>
+                        <span className="flex items-center gap-1 px-1 text-[9px] text-navy/40">
+                          {isClient ? <User2 size={9} /> : <Headset size={9} />}
+                          {isClient ? "Клиент" : `Оператор ${call.operator.name}`} · {m.time}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
+                  {call.status === "not_reached"
+                    ? "Разговора не было — стенограммы нет"
+                    : "Стенограмма для этого звонка не сформирована"}
+                </div>
+              )}
+            </div>
             </div>
 
             {/* Правая колонка — ИИ-карточка */}
@@ -231,6 +275,7 @@ export function OutboundCallDetailModal({
               )}
             </div>
           </div>
+
         </div>
 
         {/* Подвал */}
