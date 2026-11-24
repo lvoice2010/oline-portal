@@ -99,7 +99,7 @@ export function OutboundCallDetailModal({
         className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col rounded-card bg-white shadow-soft-lg">
+      <div className="relative z-10 flex h-[92vh] w-full max-w-6xl flex-col rounded-card bg-white shadow-soft-lg">
         {/* Шапка */}
         <div className="flex items-start justify-between gap-4 border-b border-navy/[0.06] px-6 py-4">
           <div className="min-w-0 flex-1">
@@ -130,9 +130,9 @@ export function OutboundCallDetailModal({
 
         {/* Тело */}
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {/* Левая колонка — метаданные звонка */}
-            <div className="space-y-4">
+            <div className="space-y-4 lg:col-span-1">
               <div>
                 <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
                   Информация о звонке
@@ -173,61 +173,10 @@ export function OutboundCallDetailModal({
                   />
                 </div>
               </div>
-
-              {/* Запись разговора — если звонок был достаточной длины */}
-              {hasRecording && (
-                <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
-                    <Headphones size={12} /> Запись разговора
-                  </p>
-                  <AudioPlayerStub duration={call.durationSec} uid={call.uid} />
-                </div>
-              )}
-
-              {/* Стенограмма разговора */}
-            <div>
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
-                Стенограмма
-              </p>
-              {transcript && transcript.length > 0 ? (
-                <div className="max-h-[40vh] space-y-2 overflow-y-auto rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
-                  {transcript.map((m, i) => {
-                    const isClient = m.speaker === "client";
-                    return (
-                      <div
-                        key={i}
-                        className={cn("flex flex-col gap-0.5", isClient ? "items-end" : "items-start")}
-                      >
-                        <div
-                          className={cn(
-                            "max-w-[80%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
-                            isClient
-                              ? "rounded-br-sm bg-copper text-white"
-                              : "rounded-bl-sm border border-amber-200 bg-amber-50 text-navy"
-                          )}
-                        >
-                          {m.text}
-                        </div>
-                        <span className="flex items-center gap-1 px-1 text-[9px] text-navy/40">
-                          {isClient ? <User2 size={9} /> : <Headset size={9} />}
-                          {isClient ? "Клиент" : `Оператор ${call.operator.name}`} · {m.time}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
-                  {call.status === "not_reached"
-                    ? "Разговора не было — стенограммы нет"
-                    : "Стенограмма для этого звонка не сформирована"}
-                </div>
-              )}
-            </div>
             </div>
 
-            {/* Правая колонка — ИИ-карточка */}
-            <div className="space-y-4">
+            {/* Центр — ИИ-карточка */}
+            <div className="space-y-4 lg:col-span-1">
               {call.ai ? (
                 <>
                   <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-copper">
@@ -274,8 +223,58 @@ export function OutboundCallDetailModal({
                 </div>
               )}
             </div>
+
+            {/* Правая колонка — стенограмма */}
+            <div className="lg:col-span-1">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                Стенограмма
+              </p>
+              {transcript && transcript.length > 0 ? (
+                <div className="max-h-[60vh] space-y-2 overflow-y-auto rounded-card border border-navy/[0.06] bg-navy-50/40 p-3">
+                  {transcript.map((m, i) => {
+                    const isClient = m.speaker === "client";
+                    return (
+                      <div
+                        key={i}
+                        className={cn("flex flex-col gap-0.5", isClient ? "items-end" : "items-start")}
+                      >
+                        <div
+                          className={cn(
+                            "max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                            isClient
+                              ? "rounded-br-sm bg-copper text-white"
+                              : "rounded-bl-sm border border-amber-200 bg-amber-50 text-navy"
+                          )}
+                        >
+                          {m.text}
+                        </div>
+                        <span className="flex items-center gap-1 px-1 text-[9px] text-navy/40">
+                          {isClient ? <User2 size={9} /> : <Headset size={9} />}
+                          {isClient ? "Клиент" : `Оператор ${call.operator.name}`} · {m.time}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-card border border-dashed border-navy/15 bg-white p-6 text-center text-sm text-navy/45">
+                  {call.status === "not_reached"
+                    ? "Разговора не было — стенограммы нет"
+                    : "Стенограмма для этого звонка не сформирована"}
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Запись разговора — внизу под всеми блоками, как у входящих */}
+          {hasRecording && (
+            <div className="mt-6">
+              <p className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-navy/55">
+                <Headphones size={12} /> Запись разговора
+              </p>
+              <AudioPlayerStub duration={call.durationSec} uid={call.uid} />
+            </div>
+          )}
         </div>
 
         {/* Подвал */}
